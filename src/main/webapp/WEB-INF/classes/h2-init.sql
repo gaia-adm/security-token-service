@@ -65,5 +65,5 @@ create table if not exists ClientDetails (
   autoApproveScopes VARCHAR(256)
 );
 
-merge into oauth_client_details (client_id, client_secret, scope, authorized_grant_types, authorities, additional_information)
-VALUES ('restapp', 'secret', 'read,write,trust', 'client_credentials', 'ROLE_APP', 'more_data');
+-- merge into oauth_client_details (client_id, client_secret, scope, authorized_grant_types, authorities, additional_information)
+-- VALUES ('restapp', 'secret', 'read,write,trust', 'client_credentials', 'ROLE_APP', 'more_data');
