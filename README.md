@@ -9,6 +9,7 @@ Notes:
 - Token never expires (can be revoked)
 
 Current limitations/not implemented yet:
+- Distinguish between tenants/schemas based on token
 - Error handling
 - Client authentication when requesting token
 - Authentication when registering client
