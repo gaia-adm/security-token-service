@@ -1,96 +1,116 @@
-Not ready yet, will come soon
+Authorization server based on spring security.
+- Supports Client Credentials flow of Oauth2 (https://tools.ietf.org/html/rfc6749#section-4.4)
+- Runs on any servlet container or with Jetty embedded (mvn jetty:run on port 9001)
+- Running with H2 DB embedded for persisting client configuration and access tokens.
+  Schema name is auth_db under your user home folder. The schema is created upon creation of the 1st client
+- H2 DB accessible via the web console: http://localhost:9093/ (select H2 embedded, URL: jdbc:h2:~/auth_db)
+
+Notes:
+- Token never expires (can be revoked)
+
+Current limitations/not implemented yet:
+- Error handling
+- Client authentication when requesting token
+- Authentication when registering client
+- More improvements/cleanup should be applied
 
 
+Flow:
+- Create Client
+    @POST to http://localhost:9001/auth/oauth/client
+    Body example:
+    {
+        "client_id": "restapp",
+        "client_secret": "secret",
+        "scope": "trust",
+        "authorized_grant_types": "client_credentials",
+        "authorities": "ROLE_APP",
+        "additional_information": "more data"
+    }
+-  Obtain token
+    @POST to http://localhost:9001/auth/oauth/token?grant_type=client_credentials&client_id=restapp&client_secret=secret
 
 
+- Use token in your client - on example of Java webapp. NOT FINAL VERSION - works but should be cleaned up.
+    web.xml:
+        <context-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>
+                /WEB-INF/spring-security.xml
+            </param-value>
+        </context-param>
 
-Get token request: POST http://localhost:9001/auth/oauth/token?grant_type=client_credentials&client_id=restapp&client_secret=secret
-Get token response: {
-                        "access_token": "0b5b5701-4301-4ef8-afd2-2579fd24f8e1",
-                        "token_type": "bearer",
-                        "scope": "read trust write"
-                    }
+        <listener>
+            <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+        </listener>
 
-Check token request: GET to http://localhost:9001/auth/oauth/check_token?token=24b70dd2-0815-4c79-8094-624150589d25
-Check token response: {
-                          "scope": [
-                              "read",
-                              "trust",
-                              "write"
-                          ],
-                          "authorities": [
-                              "ROLE_APP"
-                          ],
-                          "client_id": "restapp"
-                      }
+        <servlet>
+            <servlet-name>spring</servlet-name>
+            <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+            <load-on-startup>1</load-on-startup>
+            <async-supported>true</async-supported>
+        </servlet>
+        <servlet-mapping>
+            <servlet-name>spring</servlet-name>
+            <!--<url-pattern>/</url-pattern>-->
+            <url-pattern>/</url-pattern>
+        </servlet-mapping>
+
+        <filter>
+            <filter-name>springSecurityFilterChain</filter-name>
+            <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+            <async-supported>true</async-supported>
+        </filter>
+        <filter-mapping>
+            <filter-name>InputFilter</filter-name>
+            <url-pattern>/rest/v1/gateway/publish</url-pattern>
+        </filter-mapping>
+        <filter-mapping>
+            <filter-name>springSecurityFilterChain</filter-name>
+            <url-pattern>/*</url-pattern>
+        </filter-mapping>
+
+    spring-security.xml (${authServer} is in default.properties, can be reset via -D parameter):
+
+    <context:property-placeholder system-properties-mode="OVERRIDE" location="classpath*:default.properties"/>
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="systemPropertiesMode" value="2" />
+    </bean>
+
+    <sec:authentication-manager alias="authenticationManager"/>
+
+    <http auto-config="true" use-expressions="false" create-session="stateless" xmlns="http://www.springframework.org/schema/security">
+        <csrf disabled="true"/>
+        <anonymous enabled="false"/>
+        <intercept-url pattern="/rest/v1/gateway/**" access="ROLE_APP"/>
+        <custom-filter ref="resourceServerFilter" before="PRE_AUTH_FILTER"/>
+    </http>
+
+    <bean id="remoteTokenServices" class="org.springframework.security.oauth2.provider.token.RemoteTokenServices">
+        <property name="checkTokenEndpointUrl" value="http://${authServer}/auth/oauth/check_token"/>
+        <property name="restTemplate" ref="restTemplate"/>
+    </bean>
+
+    <bean id="restTemplate" class="org.springframework.web.client.RestTemplate">
+        <constructor-arg name="messageConverters">
+            <list>
+                <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
+                <bean class="org.springframework.http.converter.FormHttpMessageConverter"/>
+            </list>
+        </constructor-arg>
+    </bean>
+
+    <oauth:resource-server id="resourceServerFilter" resource-id="test" token-services-ref="remoteTokenServices"/>
 
 
-Spring Security links:
-http://www.beingjavaguys.com/2014/10/spring-security-oauth2-integration.html
+Other API's exposed:
+- Check token: @GET to http://localhost:9001/auth/oauth/check_token?token=<token>. This API is actually used by client
+- Revoke token: @DELETE to http://localhost:9001/auth/oauth/token/revoke?token=<token>
+- Get client details by id: @GET to http://localhost:9001/auth/oauth/client/<client_id>
+- Get all registered clients: @GET to http://localhost:9001/auth/oauth/client
+- Delete client: @DELETE to http://localhost:9001/auth/oauth/client/<client_id>
 
-http://localhost:9000/mgs/oauth/token?grant_type=password&client_id=restapp&client_secret=restapp&username=user&password=password
-http://localhost:9000/mgs/api/users/?access_token=75225ddc-788a-403e-98eb-e55d1b8a8aea
-http://localhost:9000/mgs/oauth/token?grant_type=refresh_token&client_id=restapp&client_secret=restapp&refresh_token=a40e2794-475e-463c-9070-af0eb699e80e
+All APIs use application/json as Content-Type and Accept header values
 
+See more details about Oauth2 in Oauth2-authorization.docx
 
-ALSO can be useful: https://github.com/raonirenosto/silverauth
-
-
-
-# metrics-gateway-service
-Temporary metrics-gateway-service based on jax-rs and jersey with async I/O
-This implementation is temporary, can be moved to another platform if we discover it is not robust and scalable enough.
-
-TBD: docker file and service configuration file
-
-How to run: build a war and put it on Jetty (tested with Jetty 9.2) or run mnn jetty:run
-
-Functionality:
-- Accept metrics publishing and store it into logs/metrics-storage.log. Only tenant id and metric name stored to the file.
-- Set OAuth2 token for the provided tenant. Multiple tokens can be added.
-- Get OAuth2 token(s) for the provided tenant.
-- Monitor memory and number of threads consumed by this service
-
-API:
-- Publish metrics 
-    - URL: /mgs/rest/v1/gateway/publish
-    - Method: POST
-    - Headers: Content-Type: application/json, Accept: application/json, Authorization: Bearer <oauth2 token>
-    - Response code: 201
-    - Body: 
-    ``` json
-    [{
-      "metric":"metric-type(test,build,defect,scm)",
-      "category":"automatic-test,commit,fork",
-      "name":"test-name,job-name,defect-number,sha-of-commit",
-      "source":"ci-server,qc-name/project,scm-repository",
-      "timestamp":1432191000,
-      "tags":["any.string.value.for.further.usage","any.string.value.for.further.usage"],
-      "measurements":[{"name":"aut.build","value":968},{"name":"duration","value":350}],
-      "events":[{"name":"status","value":"failed"},{"name":"runBy","value":"admin"}]
-    }]
-    ```
-- Create oauth2 token for tenant
-    - URL: /mgs/rest/auth/set/{tenantId}
-    - Method: POST
-    - Headers: Content-Type: application/json, Accept: application/json
-    - Response code: 201
-    - Parameters:
-      - tenantId: String
-      
-  - Get oauth2 tokens for tenant
-    - URL: /mgs/rest/auth/get/{tenantId}
-    - Method: GET
-    - Headers: Content-Type: application/json, Accept: application/json
-    - Response code: 200
-    - Parameters:
-      - tenantId: String
-      
-  - Start/Stop monitoring memory and thread count every 1 second
-    - URL: /mgs/rest/monitor/action/{action}
-    - Method: GET
-    - Headers: Content-Type: application/json, Accept: application/json
-    - Response code: 200
-    - Parameters:
-      - action: String; on - start monitoring, off - stop monitoring
-    
