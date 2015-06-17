@@ -17,38 +17,6 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="storage" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/metrics-storage.log</file>
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>
-                %d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{5}:%line - %msg%n
-            </Pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- rollover daily -->
-            <fileNamePattern>metrics-storage.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-    </appender>
-
-    <appender name="monitoring" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/mgs-monitor.log</file>
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>
-                %d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{5}:%line - %msg%n
-            </Pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- rollover daily -->
-            <fileNamePattern>mgs-monitor.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-    </appender>
-
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>
@@ -58,19 +26,12 @@
     </appender>
 
 
-    <logger name="com.hp.gaia.mgs.services.MetricsCollectorService" level="info" additivity="false">
-        <appender-ref ref="storage" />
-    </logger>
-
-    <logger name="com.hp.gaia.mgs.services.MonitoringService" level="info" additivity="false">
-        <appender-ref ref="monitoring" />
-    </logger>
-
     <logger name="com.hp.gaia.mgs" level="debug" additivity="false">
-        <appender-ref ref="mgs" />
+<!--        <appender-ref ref="mgs" />-->
+        <appender-ref ref="STDOUT" />
     </logger>
 
-    <logger name="org.springframework" level="debug" additivity="false">
+    <logger name="org.springframework" level="info" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 
