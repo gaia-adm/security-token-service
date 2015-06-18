@@ -9,12 +9,17 @@ Notes:
 - Token never expires (can be revoked)
 
 Current limitations/not implemented yet:
-- Docker deployment not ready yet
+- No deployment via fleetctl
 - Distinguish between tenants/schemas based on token
 - Error handling
 - Client authentication when requesting token
 - Authentication when registering client
 - More improvements/cleanup should be applied
+
+Manually run with docker:
+- (Optional) Build the project (or just be sure that auth.war is presented under ${project_home}/target folder
+- (Optional) Build the image: docker build -t gaiaadm/auth-server .
+- Run the container: docker run -d -p 9001:8080 gaiaadm/auth-server
 
 
 Flow:
