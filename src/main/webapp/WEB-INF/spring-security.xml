@@ -92,7 +92,7 @@
         <constructor-arg name="dataSource" ref="dataSource" />
     </bean>
 
-    <bean id="customTokenEnhancer" class="com.hp.gaia.mgs.authz.CustomTokenEnhancer" />
+    <bean id="customTokenEnhancer" class="com.hp.gaia.sts.CustomTokenEnhancer" />
 
     <bean id="userApprovalHandler"
           class="org.springframework.security.oauth2.provider.approval.TokenStoreUserApprovalHandler">
@@ -139,7 +139,7 @@
     <bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close" lazy-init="true">
         <property name="driverClassName" value="org.h2.Driver" />
         <!--        <property name="url" value="jdbc:h2:mem:conf;MVCC=TRUE;INIT=RUNSCRIPT FROM 'classpath:h2-init.sql'" />-->
-        <property name="url" value="jdbc:h2:~/auth_db;MVCC=TRUE;INIT=RUNSCRIPT FROM 'classpath:h2-init.sql'" />
+        <property name="url" value="jdbc:h2:~/sts_db;MVCC=TRUE;INIT=RUNSCRIPT FROM 'classpath:h2-init.sql'" />
         <!--        <property name="username" value="sa"/>
                 <property name="password" value=""/>-->
         <property name="initialSize" value="2" />

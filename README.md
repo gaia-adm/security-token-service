@@ -3,28 +3,27 @@ Authorization server based on spring security.
 - Runs on any servlet container or with Jetty embedded (mvn jetty:run on port 9001)
 - Running with H2 DB embedded for persisting client configuration and access tokens.
   Schema name is auth_db under your user home folder. The schema is created upon creation of the 1st client
-- H2 DB accessible via the web console: http://localhost:9093/ (select H2 embedded, URL: jdbc:h2:~/auth_db)
+- H2 DB accessible via the web console: http://localhost:9093/ (select H2 embedded, URL: jdbc:h2:~/sts_db)
 
 Notes:
 - Token never expires (can be revoked)
 
 Current limitations/not implemented yet:
 - No deployment via fleetctl
-- Distinguish between tenants/schemas based on token
-- Error handling
+- Distinguish between tenants/schemas based on token (token enrichment?)
 - Client authentication when requesting token
 - Authentication when registering client
-- More improvements/cleanup should be applied
+- Logging
 
 Manually run with docker:
-- Build the image (it includes building the project also): docker build -t gaia/auth:0.1.0 .
-- Run the container: docker run -d -p 9001:8080 gaia/auth:0.1.0 java -jar start.jar
-- Quick check URL from outside of the container: curl -v http://localhost:9001/auth/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec
+- Build the image (it includes building the project also): docker build -t gaia/sts:0.1.0 .
+- Run the container: docker run -d -p 9001:8080 gaia/sts:0.1.0 java -jar start.jar
+- Quick check URL from outside of the container: curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec
 
 
 Flow:
 - Create Client
-    @POST to http://localhost:9001/auth/oauth/client
+    @POST to http://localhost:9001/sts/oauth/client
     Body example:
     {
         "client_id": "restapp",
@@ -35,7 +34,7 @@ Flow:
         "additional_information": "more data"
     }
 -  Obtain token
-    @POST to http://localhost:9001/auth/oauth/token?grant_type=client_credentials&client_id=restapp&client_secret=secret
+    @POST to http://localhost:9001/sts/oauth/token?grant_type=client_credentials&client_id=restapp&client_secret=secret
 
 
 - Use token in your client - on example of Java webapp. NOT FINAL VERSION - works but should be cleaned up.
@@ -94,7 +93,7 @@ Flow:
     </http>
 
     <bean id="remoteTokenServices" class="org.springframework.security.oauth2.provider.token.RemoteTokenServices">
-        <property name="checkTokenEndpointUrl" value="http://${authServer}/auth/oauth/check_token"/>
+        <property name="checkTokenEndpointUrl" value="http://${authServer}/sts/oauth/check_token"/>
         <property name="restTemplate" ref="restTemplate"/>
     </bean>
 
@@ -111,11 +110,11 @@ Flow:
 
 
 Other API's exposed:
-- Check token: @GET to http://localhost:9001/auth/oauth/check_token?token=<token>. This API is actually used by client
-- Revoke token: @DELETE to http://localhost:9001/auth/oauth/token/revoke?token=<token>
-- Get client details by id: @GET to http://localhost:9001/auth/oauth/client/<client_id>
-- Get all registered clients: @GET to http://localhost:9001/auth/oauth/client
-- Delete client: @DELETE to http://localhost:9001/auth/oauth/client/<client_id>
+- Check token: @GET to http://localhost:9001/sts/oauth/check_token?token=<token>. This API is actually used by client
+- Revoke token: @DELETE to http://localhost:9001/sts/oauth/token/revoke?token=<token>
+- Get client details by id: @GET to http://localhost:9001/sts/oauth/client/<client_id>
+- Get all registered clients: @GET to http://localhost:9001/sts/oauth/client
+- Delete client: @DELETE to http://localhost:9001/sts/oauth/client/<client_id>
 
 All APIs use application/json as Content-Type and Accept header values
 

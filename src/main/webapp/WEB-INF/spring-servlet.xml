@@ -9,7 +9,7 @@
 
     <context:annotation-config/>
     <mvc:annotation-driven/>
-    <context:component-scan base-package="com.hp.gaia.mgs.authz" />
+    <context:component-scan base-package="com.hp.gaia.sts" />
 <!--    <mvc:default-servlet-handler/>-->
 
 
