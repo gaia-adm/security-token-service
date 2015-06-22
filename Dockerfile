@@ -1,6 +1,6 @@
 FROM gaiaadm/basejava:0.1.0
 
-ENV GAIA_HOME /gaia
+ENV GAIA_HOME=/gaia foo=boo
 RUN mkdir -p  $GAIA_HOME
 
 ADD . $GAIA_HOME
