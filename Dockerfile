@@ -1,4 +1,4 @@
-FROM gaia/basejava:0.1.0
+FROM gaiaadm/basejava:0.1.0
 
 ADD . $GAIA_HOME
 WORKDIR $GAIA_HOME
