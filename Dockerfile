@@ -1,5 +1,8 @@
 FROM gaiaadm/basejava:0.1.0
 
+ENV GAIA_HOME /gaia
+RUN mkdir -p  $GAIA_HOME
+
 ADD . $GAIA_HOME
 WORKDIR $GAIA_HOME
 
