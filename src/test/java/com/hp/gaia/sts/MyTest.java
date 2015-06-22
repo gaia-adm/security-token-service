@@ -20,9 +20,9 @@ public class MyTest {
     public void faileIfNoFoo() throws Exception {
         String foo = System.getenv("foo");
         if (foo == null || "".equals(foo)) {
-            assertFalse("foo not found", true);
+            assertFalse("foo not found and this is good", false);
         } else {
-            assertTrue("foo found: " + foo, true);
+            assertFalse("foo found and this is not good: " + foo, true);
         }
 
     }
