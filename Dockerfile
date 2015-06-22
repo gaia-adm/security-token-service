@@ -8,5 +8,6 @@ RUN cp $GAIA_HOME/target/*.war $JETTY_HOME/webapps
 
 WORKDIR $JETTY_HOME
 EXPOSE 8080
-# RUN java -jar start.jar
-CMD ["/bin/bash"]
+
+# CMD ["/bin/bash"]
+CMD java -jar start.jar
