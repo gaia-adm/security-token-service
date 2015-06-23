@@ -13,7 +13,7 @@
 - Distinguish between tenants/schemas based on token (token enrichment?)
 - Client authentication is missing when requesting token or registering client
 
-## Manually run with docker (automated with buildAndRun.sh):
+## Manually run with docker 
 - docker build -t sts_build -f Dockerfile.build .
 - Optional: docker rm build_cont
 - docker create --name build_cont sts_build
@@ -21,29 +21,30 @@
 - docker build -t gaiaadm/sts .
 - docker run -d -u jetty -p 9001:8080 gaiaadm/sts
 - Optional: check that server started as needed from outside of docker - curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec
-### Base images used during the process:
+**Base images used during the process**:
 - maven:3.3.3-jdk-8 - build the project (https://registry.hub.docker.com/u/library/maven/)
 - jetty:9.3.0-jre8 - run the server (https://registry.hub.docker.com/u/library/jetty/)
+*The above process is automated with buildAndRun.sh script*
 
 ## Flow:
 - Create Client
     @POST to http://localhost:9001/sts/oauth/client
     Body example:
-    `{
+    {
         "client_id": "restapp",
         "client_secret": "secret",
         "scope": "trust",
         "authorized_grant_types": "client_credentials",
         "authorities": "ROLE_APP",
         "additional_information": "more data"
-    }`
+    }
 -  Obtain token
     @POST to http://localhost:9001/sts/oauth/token?grant_type=client_credentials&client_id=restapp&client_secret=secret
 
 
 - Use token in your client - on example of Java webapp. NOT FINAL VERSION - works but should be cleaned up.
     **web.xml**:
-        `<context-param>
+        <context-param>
             <param-name>contextConfigLocation</param-name>
             <param-value>
                 /WEB-INF/spring-security.xml
@@ -78,11 +79,11 @@
         <filter-mapping>
             <filter-name>springSecurityFilterChain</filter-name>
             <url-pattern>/*</url-pattern>
-        </filter-mapping>`
+        </filter-mapping>
 
     **spring-security.xml** (${authServer} is in default.properties, can be reset via -D parameter):
 
-    `<context:property-placeholder system-properties-mode="OVERRIDE" location="classpath*:default.properties"/>
+    <context:property-placeholder system-properties-mode="OVERRIDE" location="classpath*:default.properties"/>
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="systemPropertiesMode" value="2" />
     </bean>
@@ -110,7 +111,7 @@
         </constructor-arg>
     </bean>
 
-    <oauth:resource-server id="resourceServerFilter" resource-id="test" token-services-ref="remoteTokenServices"/>`
+    <oauth:resource-server id="resourceServerFilter" resource-id="test" token-services-ref="remoteTokenServices"/>
 
 
 ## Other API's exposed:
