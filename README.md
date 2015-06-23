@@ -20,16 +20,17 @@
 - docker cp build_cont:/usr/local/gaia/target/sts.war ./target/
 - docker build -t gaiaadm/sts .
 - docker run -d -u jetty -p 9001:8080 gaiaadm/sts
-- Optional: check that server started as needed from outside of docker - curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec
-**Base images used during the process**:
+- Optional: check that server started as needed from outside of docker - curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec <br />
+***Base images used during the process***:
 - maven:3.3.3-jdk-8 - build the project (https://registry.hub.docker.com/u/library/maven/)
-- jetty:9.3.0-jre8 - run the server (https://registry.hub.docker.com/u/library/jetty/)
-*The above process is automated with buildAndRun.sh script*
+- jetty:9.3.0-jre8 - run the server (https://registry.hub.docker.com/u/library/jetty/) <br />
+***The above process is automated with buildAndRun.sh script***
 
 ## Flow:
 - Create Client
     @POST to http://localhost:9001/sts/oauth/client
-    Body example:
+    Body example: <br />
+    ```
     {
         "client_id": "restapp",
         "client_secret": "secret",
@@ -38,6 +39,7 @@
         "authorities": "ROLE_APP",
         "additional_information": "more data"
     }
+    ```
 -  Obtain token
     @POST to http://localhost:9001/sts/oauth/token?grant_type=client_credentials&client_id=restapp&client_secret=secret
 
@@ -82,7 +84,7 @@
         </filter-mapping>
 
     **spring-security.xml** (${authServer} is in default.properties, can be reset via -D parameter):
-
+```
     <context:property-placeholder system-properties-mode="OVERRIDE" location="classpath*:default.properties"/>
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="systemPropertiesMode" value="2" />
@@ -112,14 +114,14 @@
     </bean>
 
     <oauth:resource-server id="resourceServerFilter" resource-id="test" token-services-ref="remoteTokenServices"/>
-
+```
 
 ## Other API's exposed:
 - Check token: @GET to http://localhost:9001/sts/oauth/check_token?token=<token>. This API is actually used by client
 - Revoke token: @DELETE to http://localhost:9001/sts/oauth/token/revoke?token=<token>
 - Get client details by id: @GET to http://localhost:9001/sts/oauth/client/<client_id>
 - Get all registered clients: @GET to http://localhost:9001/sts/oauth/client
-- Delete client: @DELETE to http://localhost:9001/sts/oauth/client/<client_id>
+- Delete client: @DELETE to http://localhost:9001/sts/oauth/client/<client_id> <br />
 *All APIs use application/json as Content-Type and Accept header values*
 
 **See more details about Oauth2 in Oauth2-authorization.docx**
