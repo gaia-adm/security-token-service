@@ -16,8 +16,12 @@ Current limitations/not implemented yet:
 - Logging
 
 Manually run with docker:
-- Build the image (it includes building the project also): docker build -t gaiaadm/sts:0.1.0 .
-- Run the container: docker run -d -p 9001:8080 gaiaadm/sts:0.1.0
+- Build the `sts.war` with following command: `docker build -t sts-build -f Dockerfile.build .`
+- Copy created `sts.war` to your host `target` folder
+  - create container: `docker create --name build-cont sts-build`
+  - copy `sts.war`: `docker cp build-cont:/usr/src/app/target/sts.war ./target/`
+- Build STS image with: `docker build -t gaiaadm:sts .`
+- Create and run STS container: `docker run -d -p 9001:8080 gaiaadm/sts`
 - Quick check URL from outside of the container: curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec
 
 
@@ -119,4 +123,3 @@ Other API's exposed:
 All APIs use application/json as Content-Type and Accept header values
 
 See more details about Oauth2 in Oauth2-authorization.docx
-

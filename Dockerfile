@@ -1,16 +1,3 @@
-FROM gaiaadm/basejava:0.1.0
+FROM jetty:9.3.0-jre8
 
-ENV GAIA_HOME=/usr/local/gaia
-RUN mkdir -p  $GAIA_HOME
-
-ADD . $GAIA_HOME
-WORKDIR $GAIA_HOME
-
-RUN mvn clean install
-RUN cp $GAIA_HOME/target/*.war $JETTY_HOME/webapps
-
-WORKDIR $JETTY_HOME
-EXPOSE 8080
-
-# CMD ["/bin/bash"]
-CMD java -jar start.jar
+COPY ./target/*.war $JETTY_HOME/webapps/
