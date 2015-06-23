@@ -22,7 +22,7 @@ Manually run with docker:
   - copy `sts.war`: `docker cp build-cont:/usr/src/app/target/sts.war ./target/`
 - Build STS image with: `docker build -t gaiaadm:sts .`
 - Create and run STS container: `docker run -d -p 9001:8080 gaiaadm/sts`
-- Quick check URL from outside of the container: curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec
+- Quick check URL from outside of the container: `curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec`
 
 
 Flow:
