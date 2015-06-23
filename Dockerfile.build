@@ -1,9 +1,11 @@
 FROM maven:3.3.3-jdk-8
 
-RUN mkdir -p /usr/local/gaia
-WORKDIR /usr/local/gaia
+ENV GAIA_HOME=/usr/local/gaia
 
-ADD . /usr/local/gaia
+RUN mkdir -p $GAIA_HOME
+WORKDIR $GAIA_HOME
+
+ADD . $GAIA_HOME
 
 # RUN ["mvn","-DuseProxy=true","-DproxyHost=web-proxy.israel.hp.com","-DproxyPort=8080","clean","install"]
 RUN ["mvn","clean","install"]
