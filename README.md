@@ -16,8 +16,8 @@ Current limitations/not implemented yet:
 - Logging
 
 Manually run with docker:
-- Build the image (it includes building the project also): docker build -t gaia/sts:0.1.0 .
-- Run the container: docker run -d -p 9001:8080 gaia/sts:0.1.0
+- Build the image (it includes building the project also): docker build -t gaiaadm/sts:0.1.0 .
+- Run the container: docker run -d -p 9001:8080 gaiaadm/sts:0.1.0
 - Quick check URL from outside of the container: curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec
 
 
