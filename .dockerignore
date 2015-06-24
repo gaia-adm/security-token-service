@@ -1,0 +1,11 @@
+*.md
+*.doc
+/target/*
+*/target/*
+*.iml
+*.ipr
+*.iws
+*.log
+/.idea/
+*/test-output/*
+Dockerfile*
