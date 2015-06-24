@@ -1,0 +1,22 @@
+machine:
+  services:
+    - docker
+dependencies:
+  override:
+    - docker build -f Dockerfile.build -t build-img .
+    - docker create -n build-cont build-img
+    - docker cp build-cont:/usr/local/gaia/target/sts.war ./target/sts.war
+    - docker build -t gaiaadm/sts .
+test:
+  override:
+    - docker run -d -p 9001:8080 gaiaadm/sts:$BUILD_TAG; sleep 20
+    - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 OK"
+deployment:
+  hub:
+    branch: master
+    commands:
+      # - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      # - docker push gaiaadm/sts
+general:
+  artifacts:
+    - target/sts.war
