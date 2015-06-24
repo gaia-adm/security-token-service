@@ -1,0 +1,35 @@
+Examples of curl commands for using security-token-service functionality
+
+In all commands, host and port must be set, the examples use localhost:9001 for running from local core-os machine
+Check the specific command section to see what more parameters should be changed
+
+==== Clients =====
+
+Create client
+curl -H "Content-Type: application/json" -d '{"client_id": "restapp","client_secret": "secret","scope": "read,write,trust","authorized_grant_types": "client_credentials","authorities": "ROLE_APP","additional_information": "more data"}' http://localhost:9001/sts/oauth/client
+>>> NOTE - should be set: client_id, client_secret, additional_information (the latter is optional)
+
+Get client by ID:
+curl -H "Accept: application/json" http://localhost:9001/sts/oauth/client/restapp
+>>> NOTE - should be set: client_id
+
+Get all clients:
+curl -H "Accept: application/json" http://localhost:9001/sts/oauth/client
+
+Delete client by ID:
+curl -X DELETE http://localhost:9001/sts/oauth/client/restapp2
+>>> NOTE - should be set: client_id
+
+==== Tokens ====
+
+Create token:
+curl -v -H "Accept: application/json" -H "Content-Type: application/json" -X POST "http://localhost:9001/sts/oauth/token?grant_type=client_credentials&client_id=restapp&client_secret=secret"
+>>> NOTE - should be set: client_id, client_secret
+
+Check token:
+curl -v -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec
+>>> NOTE - should be set: token
+
+Revoke token:
+curl -v -X DELETE http://localhost:9001/sts/oauth/token/revoke?token=392df810-c616-4f8c-b190-604c9aaf85d8
+>>> NOTE - should be set: token
