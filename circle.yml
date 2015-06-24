@@ -3,7 +3,7 @@ machine:
     - docker
 dependencies:
   override:
-    - docker build -f Dockerfile.build -t build-img .
+    - docker build -t build-img -f Dockerfile.build .
     - docker create -n build-cont build-img
     - docker cp build-cont:/usr/local/gaia/target/sts.war ./target/sts.war
     - docker build -t gaiaadm/sts .
