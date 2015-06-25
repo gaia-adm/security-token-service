@@ -1,3 +1,9 @@
+create table if not exists TENANT (
+  tenant_id INT auto_increment PRIMARY KEY,
+  tenant_name VARCHAR(256) UNIQUE ,
+  tenant_db_name VARCHAR(256) UNIQUE
+);
+
 create table if not exists oauth_client_details (
   client_id VARCHAR(256) PRIMARY KEY,
   resource_ids VARCHAR(256),

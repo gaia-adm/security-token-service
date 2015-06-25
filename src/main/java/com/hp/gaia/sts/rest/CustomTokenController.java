@@ -1,4 +1,4 @@
-package com.hp.gaia.sts;
+package com.hp.gaia.sts.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.common.exceptions.InvalidClientException;

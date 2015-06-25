@@ -86,13 +86,14 @@
         <property name="accessTokenValiditySeconds" value="0"/>
         <!--boris: 0 or negative: never expires -->
         <property name="clientDetailsService" ref="clientDetailsDb"/>
+        <property name="tokenEnhancer" ref="customTokenEnhancer" />
     </bean>
 
     <bean id="tokenStoreDB" class="org.springframework.security.oauth2.provider.token.store.JdbcTokenStore">
         <constructor-arg name="dataSource" ref="dataSource" />
     </bean>
 
-    <bean id="customTokenEnhancer" class="com.hp.gaia.sts.CustomTokenEnhancer" />
+    <bean id="customTokenEnhancer" class="com.hp.gaia.sts.util.CustomTokenEnhancer" />
 
     <bean id="userApprovalHandler"
           class="org.springframework.security.oauth2.provider.approval.TokenStoreUserApprovalHandler">
@@ -147,6 +148,11 @@
         <property name="maxIdle" value="5" />
         <property name="poolPreparedStatements" value="true" />
     </bean>
+
+    <bean id="tenantDao" class="com.hp.gaia.sts.dao.TenantDaoImpl">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
     <!-- H2 DB Web Console -->
     <bean id="h2WebServer" class="org.h2.tools.Server" factory-method="createWebServer" init-method="start" destroy-method="stop">
         <constructor-arg value="-web,-webAllowOthers,-webPort,9093"/>
