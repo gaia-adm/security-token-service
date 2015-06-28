@@ -7,6 +7,7 @@ import com.hp.gaia.sts.dto.Tenant;
 import com.sun.java.browser.dom.DOMAccessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -62,7 +63,11 @@ public class TenantController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTenantByName(@PathVariable("tenantId") Integer tenantId){
 
-        tenantDao.deleteById(tenantId);
+        try{
+            tenantDao.deleteById(tenantId);
+        } catch (EmptyResultDataAccessException erdae) {
+            //do nothing
+        }
 
     }
 
