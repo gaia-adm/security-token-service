@@ -3,11 +3,23 @@ Examples of curl commands for using security-token-service functionality
 In all commands, host and port must be set, the examples use localhost:9001 for running from local core-os machine
 Check the specific command section to see what more parameters should be changed
 
+=== Tenants ===
+
+Create tenant
+curl -H "Content-Type: application/json" -d '{"tenantName": "tenant1","tenantDbName": "db1"}' http://localhost:9001/sts/tenant
+>>> NOTE - should be set: tenantName, tenantDbName
+
+Get tenant by name
+curl -H "Accept: application/json" http://localhost:9001/sts/tenant/{tenantName}
+>>> NOTE - should be set: tenantName
+
+
+
 ==== Clients =====
 
 Create client
-curl -H "Content-Type: application/json" -d '{"client_id": "restapp","client_secret": "secret","scope": "read,write,trust","authorized_grant_types": "client_credentials","authorities": "ROLE_APP","additional_information": "more data"}' http://localhost:9001/sts/oauth/client
->>> NOTE - should be set: client_id, client_secret, additional_information (the latter is optional)
+curl -H "Content-Type: application/json" -d '{"client_id": "restapp","client_secret": "secret","scope": "read,write,trust","authorized_grant_types": "client_credentials","authorities": "ROLE_APP","tenantId": 33}' http://localhost:9001/sts/oauth/client
+>>> NOTE - should be set: client_id, client_secret, tenantId
 
 Get client by ID:
 curl -H "Accept: application/json" http://localhost:9001/sts/oauth/client/restapp

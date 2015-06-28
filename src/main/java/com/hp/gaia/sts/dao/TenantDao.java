@@ -11,8 +11,10 @@ import java.util.List;
 public interface TenantDao {
 
     public void save(Tenant tenant);
+    public void deleteById(int tenantId);
 
     public List<Tenant> getAllTenants();
     public Tenant getTenantById(int tenantId);
+    public Tenant getTenantByName(String name);
 
 }

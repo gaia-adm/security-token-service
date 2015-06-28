@@ -21,9 +21,11 @@ public class TenantDaoImpl implements TenantDao {
 
     private final String DEFAULT_INSERT_TENANT_STATEMENT = "insert into TENANT (tenant_name, tenant_db_name) values (?, ?)";
     private final String DEFAULT_SELECT_TENANTS_STATEMENT = "select tenant_id, tenant_name, tenant_db_name from TENANT";
+    private final String DEFAULT_DELETE_TENANT__BY_ID_STATEMENT = "delete from TENANT where tenant_id = ?";
 
     private String insertTenantSql = DEFAULT_INSERT_TENANT_STATEMENT;
     private String selectTenantSql = DEFAULT_SELECT_TENANTS_STATEMENT;
+    private String deleteTenantSql = DEFAULT_DELETE_TENANT__BY_ID_STATEMENT;
 
     public TenantDaoImpl(DataSource dataSource) {
         jdbcTemplate = new JdbcTemplate(dataSource);
@@ -32,6 +34,11 @@ public class TenantDaoImpl implements TenantDao {
     @Override
     public void save(Tenant tenant) {
         jdbcTemplate.update(insertTenantSql, new Object[]{tenant.getTenantName(), tenant.getTenantDbName()});
+    }
+
+    @Override
+    public void deleteById(int tenantId) {
+        jdbcTemplate.update(deleteTenantSql, new Object[]{tenantId});
     }
 
     @Override
@@ -44,6 +51,14 @@ public class TenantDaoImpl implements TenantDao {
 
         String selectTenantSqlById = selectTenantSql + " where tenant_id = ?";
         return jdbcTemplate.queryForObject(selectTenantSqlById, new Object[]{tenantId}, new TenantRowMapper());
+
+    }
+
+    @Override
+    public Tenant getTenantByName(String name) {
+
+        String selectTenantSqlByName = selectTenantSql + " where tenant_name = ?";
+        return jdbcTemplate.queryForObject(selectTenantSqlByName, new Object[]{name}, new TenantRowMapper());
 
     }
 

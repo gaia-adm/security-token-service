@@ -1,8 +1,10 @@
 package com.hp.gaia.sts.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.gaia.sts.dao.TenantDao;
 import com.hp.gaia.sts.dto.Tenant;
+import com.sun.java.browser.dom.DOMAccessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -37,6 +39,31 @@ public class TenantController {
         } catch (IOException ioe) {
             return new ResponseEntity<>("Bad input received", HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @RequestMapping(value = "/tenant/{tenantName}", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public ResponseEntity<String> getTenantByName(@PathVariable("tenantName") String tenantName) {
+
+        try {
+            Tenant tenant = tenantDao.getTenantByName(tenantName);
+            return new ResponseEntity<>(objectMapper.writeValueAsString(tenant), HttpStatus.OK);
+        } catch (DataAccessException dae){
+            dae.printStackTrace();
+            return new ResponseEntity<>("Tenant not found with the name provided", HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (JsonProcessingException jpe) {
+            jpe.printStackTrace();
+            return new ResponseEntity<>("Failed to return tenant data", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @RequestMapping(value = "/tenant/{tenantId}", method = RequestMethod.DELETE)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTenantByName(@PathVariable("tenantId") Integer tenantId){
+
+        tenantDao.deleteById(tenantId);
+
     }
 
 }
