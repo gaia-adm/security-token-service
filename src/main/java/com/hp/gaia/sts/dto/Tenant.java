@@ -6,12 +6,12 @@ package com.hp.gaia.sts.dto;
 public class Tenant {
 
     private int tenantId;
-    private String tenantName;
-    private String tenantDbName;
+    private String adminUserName;
+    private long createdAt;
 
-    public Tenant(String tenantName, String tenantDbName) {
-        this.tenantName = tenantName;
-        this.tenantDbName = tenantDbName;
+    public Tenant(String adminUserName) {
+        this.adminUserName = adminUserName;
+        this.createdAt = System.currentTimeMillis();
     }
 
     public Tenant(){
@@ -25,20 +25,19 @@ public class Tenant {
         this.tenantId = tenantId;
     }
 
-    public String getTenantName() {
-        return tenantName;
+    public String getAdminUserName() {
+        return adminUserName;
     }
 
-    public void setTenantName(String tenantName) {
-        this.tenantName = tenantName;
+    public void setAdminUserName(String adminUserName) {
+        this.adminUserName = adminUserName;
     }
 
-    public String getTenantDbName() {
-        return tenantDbName;
+    public long getCreatedAt() {
+        return createdAt;
     }
 
-    public void setTenantDbName(String tenantDbName) {
-        this.tenantDbName = tenantDbName;
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
     }
-
 }

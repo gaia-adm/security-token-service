@@ -42,12 +42,12 @@ public class TenantController {
         }
     }
 
-    @RequestMapping(value = "/tenant/{tenantName}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/tenant", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public ResponseEntity<String> getTenantByName(@PathVariable("tenantName") String tenantName) {
+    public ResponseEntity<String> getTenantByName(@RequestParam("user") String adminUserName) {
 
         try {
-            Tenant tenant = tenantDao.getTenantByName(tenantName);
+            Tenant tenant = tenantDao.getTenantByAdminName(adminUserName);
             return new ResponseEntity<>(objectMapper.writeValueAsString(tenant), HttpStatus.OK);
         } catch (DataAccessException dae){
             dae.printStackTrace();

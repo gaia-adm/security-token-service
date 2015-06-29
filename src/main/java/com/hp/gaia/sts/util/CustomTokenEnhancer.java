@@ -41,9 +41,7 @@ public class CustomTokenEnhancer implements TokenEnhancer {
 
         Map<String, Object> map = new HashMap<>();
         map.put("tenantId", tenant.getTenantId());
-        map.put("tenantName", tenant.getTenantName());
-        map.put("tenantDbName", tenant.getTenantDbName());
-        map.put("createdAt", new Date());
+        map.put("createdAt", System.currentTimeMillis());
 
         ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(map);
 

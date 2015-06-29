@@ -25,10 +25,8 @@ import static org.junit.Assert.assertEquals;
 public class CustomTokenEnhancerTest {
 
     private final static String TENANT_ID_PROP_NAME = "tenantId";
-    private final static String TENANT_DB_NAME_PROP_NAME = "tenantDbName";
-
     private final static Integer TENANT_ID = 12345;
-    private final static String TENANT_DB_NAME = "db_12345_test";
+    private final static String TENANT_ADMIN_USER_NAME="admin@hp.com";
 
     CustomTokenEnhancer enhancer;
     ClientDetailsService clientDetailsService;
@@ -43,7 +41,6 @@ public class CustomTokenEnhancerTest {
     public void setUp() throws Exception {
 
         additionalInfo.put(TENANT_ID_PROP_NAME, TENANT_ID);
-        additionalInfo.put(TENANT_DB_NAME_PROP_NAME, TENANT_DB_NAME);
 
         authentication = createNiceMock(OAuth2Authentication.class);
         clientDetails = createNiceMock(BaseClientDetails.class);
@@ -57,7 +54,7 @@ public class CustomTokenEnhancerTest {
 
     @Test
     public void testEnhance() throws Exception {
-        Tenant tenant = new Tenant("tName", TENANT_DB_NAME);
+        Tenant tenant = new Tenant(TENANT_ADMIN_USER_NAME);
         tenant.setTenantId(TENANT_ID);
         expect(authentication.getPrincipal()).andReturn("justDummyString").once();
         expect(clientDetailsService.loadClientByClientId(anyString())).andReturn(clientDetails).once();
@@ -68,8 +65,6 @@ public class CustomTokenEnhancerTest {
         verify(authentication, clientDetailsService, clientDetails, tenantDao);
 
         assertEquals(TENANT_ID, accessToken.getAdditionalInformation().get(TENANT_ID_PROP_NAME));
-        assertEquals(TENANT_DB_NAME, accessToken.getAdditionalInformation().get(TENANT_DB_NAME_PROP_NAME));
-
     }
 
     @Test(expected = UnapprovedClientAuthenticationException.class)

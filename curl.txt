@@ -6,13 +6,16 @@ Check the specific command section to see what more parameters should be changed
 === Tenants ===
 
 Create tenant
-curl -H "Content-Type: application/json" -d '{"tenantName": "tenant1","tenantDbName": "db1"}' http://localhost:9001/sts/tenant
->>> NOTE - should be set: tenantName, tenantDbName
+curl -H "Content-Type: application/json" -d '{"adminUserName": "foo@hp.com"}' http://localhost:9001/sts/tenant
+>>> NOTE - should be set: adminUserName
 
-Get tenant by name
-curl -H "Accept: application/json" http://localhost:9001/sts/tenant/{tenantName}
->>> NOTE - should be set: tenantName
+Get tenant by admin user name name
+curl -H "Accept: application/json" http://localhost:9001/sts/tenant?user={adminUserName}
+>>> NOTE - should be set: adminUserName
 
+Delete tenant by id
+curl -X DELETE http://localhost:9001/sts/tenant/1
+>>> NOTE - should be set: tenantId
 
 
 ==== Clients =====
