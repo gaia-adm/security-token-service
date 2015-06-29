@@ -18,8 +18,10 @@ function validate {
 curl -i -X DELETE http://localhost:9001/sts/oauth/client/$CLIENT_NAME | grep '204 No Content'
 validate $? 'SUCCESS: OAUTH_CLIENT_DETAILS table is clean' 'ERROR: Failed to clean OAUTH_CLIENT_DETAILS table'
 TENANT_ID=$(curl -H "Accept: application/json" http://localhost:9001/sts/tenant?user=$TENANT_ADMIN_NAME | grep 'tenantId' | sed s/,/\\n/g | grep 'tenantId' | sed -s 's/"tenantId":\(.*\)/\1/'  | sed -r 's/\{//g')
-curl -i -X DELETE http://localhost:9001/sts/tenant/$TENANT_ID  | grep '204 No Content'
-validate $? 'SUCCESS: TENANT table is clean' 'ERROR: Failed to clean TENANT table'
+if [ ! -z "$TENANT_ID" ]; then
+   curl -i -X DELETE http://localhost:9001/sts/tenant/$TENANT_ID  | grep '204 No Content'
+   validate $? 'SUCCESS: TENANT table is clean' 'ERROR: Failed to clean TENANT table'
+fi
 
 ##### create tenant
 curl -i -H "Content-Type: application/json" -d '{"adminUserName": "'$TENANT_ADMIN_NAME'"}' http://localhost:9001/sts/tenant | grep '201 Created'
