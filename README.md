@@ -27,23 +27,13 @@
 ***The above process is automated with buildAndRun.sh script***
 
 ## Flow:
-- Create Client
-    @POST to http://localhost:9001/sts/oauth/client
-    Body example: <br />
-    ```
-    {
-        "client_id": "restapp",
-        "client_secret": "secret",
-        "scope": "trust",
-        "authorized_grant_types": "client_credentials",
-        "authorities": "ROLE_APP",
-        "additional_information": "more data"
-    }
-    ```
--  Obtain token
-    @POST to http://localhost:9001/sts/oauth/token?grant_type=client_credentials&client_id=restapp&client_secret=secret
+- Create tenant
+- Create client
+- Create token
+- Use token ("Authorization: Bearer <token>" header) in other services
+***Refer curl.txt and SystemTestCurl.sh files to see the usage examples of ReST APIs***
 
-
+## Example of java-based client service configuration
 - Use token in your client - on example of Java webapp. NOT FINAL VERSION - works but should be cleaned up.
     **web.xml**:
         <context-param>
@@ -116,12 +106,5 @@
     <oauth:resource-server id="resourceServerFilter" resource-id="test" token-services-ref="remoteTokenServices"/>
 ```
 
-## Other API's exposed:
-- Check token: @GET to http://localhost:9001/sts/oauth/check_token?token=<token>. This API is actually used by client
-- Revoke token: @DELETE to http://localhost:9001/sts/oauth/token/revoke?token=<token>
-- Get client details by id: @GET to http://localhost:9001/sts/oauth/client/<client_id>
-- Get all registered clients: @GET to http://localhost:9001/sts/oauth/client
-- Delete client: @DELETE to http://localhost:9001/sts/oauth/client/<client_id> <br />
-*All APIs use application/json as Content-Type and Accept header values*
-
+## More details
 **See more details about Oauth2 in Oauth2-authorization.docx**
