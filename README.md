@@ -19,7 +19,7 @@
 - docker create --name build_cont sts_build
 - docker cp build_cont:/usr/local/gaia/target/sts.war ./target/
 - docker build -t gaiaadm/sts .
-- docker run -d -u jetty -p 9001:8080 gaiaadm/sts
+- docker run -d --name sts -u jetty -p 9001:8080 -p 9093:9093 gaiaadm/sts
 - Optional: check that server started as needed from outside of docker - curl -v http://localhost:9001/sts/oauth/check_token?token=62ad16cf-ab6c-42fa-af3d-359ecf98cdec <br />
 ***Base images used during the process***:
 - maven:3.3.3-jdk-8 - build the project (https://registry.hub.docker.com/u/library/maven/)
