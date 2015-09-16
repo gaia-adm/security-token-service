@@ -5,13 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.provider.ClientAlreadyExistsException;
-import org.springframework.security.oauth2.provider.ClientDetails;
-import org.springframework.security.oauth2.provider.ClientDetailsService;
-import org.springframework.security.oauth2.provider.NoSuchClientException;
+import org.springframework.security.oauth2.provider.*;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
-import org.springframework.security.oauth2.provider.client.EtcdClientDetailsService;
-import org.springframework.security.oauth2.provider.client.Jdbc1ClientDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +15,7 @@ import java.util.List;
 
 /**
  * Created by belozovs on 6/15/2015.
+ *
  */
 @Controller
 public class ClientDetailsController {
@@ -47,7 +43,7 @@ public class ClientDetailsController {
     @ResponseBody
     public String getAllClients() throws JsonProcessingException {
 
-        List<ClientDetails> clientDetails = ((EtcdClientDetailsService) clientDetailsService).listClientDetails();
+        List<ClientDetails> clientDetails = ((ClientRegistrationService) clientDetailsService).listClientDetails();
 
         return objectMapper.writeValueAsString(clientDetails);
     }
@@ -58,7 +54,7 @@ public class ClientDetailsController {
 
         ClientDetails clientDetails = objectMapper.readValue(clientDetailsString, BaseClientDetails.class);
         try {
-            ((EtcdClientDetailsService) clientDetailsService).addClientDetails(clientDetails);
+            ((ClientRegistrationService) clientDetailsService).addClientDetails(clientDetails);
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (ClientAlreadyExistsException caee) {
             caee.printStackTrace();
@@ -73,7 +69,7 @@ public class ClientDetailsController {
     public void deleteClientById(@PathVariable("id") String clientId) throws JsonProcessingException {
 
         try {
-            ((EtcdClientDetailsService) clientDetailsService).removeClientDetails(clientId);
+            ((ClientRegistrationService) clientDetailsService).removeClientDetails(clientId);
         } catch (NoSuchClientException nsce) {//do nothing
         }
 

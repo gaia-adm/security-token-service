@@ -1,5 +1,11 @@
 CircleCI build status: [![Circle CI](https://circleci.com/gh/gaia-adm/security-token-service.svg?style=svg)](https://circleci.com/gh/gaia-adm/security-token-service)
 
+PERSISTENCE:
+- selected by -Dspring.profiles.active=db or -Dspring.profiles.active=default (latter - optional)
+- with -Dspring.profiles.active=db, local H2 DB serves as persistence (see below)
+- without any profile activation or with -Dspring.profiles.active=default etcd serves as persistence
+
+
 ## Authorization server based on spring security.
 - Supports Client Credentials flow of Oauth2 (https://tools.ietf.org/html/rfc6749#section-4.4)
 - Runs on any servlet container or with Jetty embedded (mvn jetty:run on port 9001)
