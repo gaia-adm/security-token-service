@@ -1,9 +1,7 @@
 package com.hp.gaia.sts.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.TextNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +10,8 @@ import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.NoSuchClientException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
-import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
+import org.springframework.security.oauth2.provider.client.EtcdClientDetailsService;
+import org.springframework.security.oauth2.provider.client.Jdbc1ClientDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +29,7 @@ public class ClientDetailsController {
     @Autowired
     ClientDetailsService clientDetailsService;
 
-    @RequestMapping(value = "/oauth/client/{id}", method = RequestMethod.GET, produces="application/json")
+    @RequestMapping(value = "/oauth/client/{id}", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
     public ResponseEntity<String> getClientById(@PathVariable("id") String clientId) throws JsonProcessingException {
 
@@ -44,22 +43,22 @@ public class ClientDetailsController {
 
     }
 
-    @RequestMapping(value = "/oauth/client", method = RequestMethod.GET, produces="application/json")
+    @RequestMapping(value = "/oauth/client", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
     public String getAllClients() throws JsonProcessingException {
 
-        List<ClientDetails> clientDetails = ((JdbcClientDetailsService) clientDetailsService).listClientDetails();
+        List<ClientDetails> clientDetails = ((EtcdClientDetailsService) clientDetailsService).listClientDetails();
 
         return objectMapper.writeValueAsString(clientDetails);
     }
 
-    @RequestMapping(value = "/oauth/client", method = RequestMethod.POST, consumes="application/json")
+    @RequestMapping(value = "/oauth/client", method = RequestMethod.POST, consumes = "application/json")
     @ResponseBody
     public ResponseEntity<String> addClient(@RequestBody String clientDetailsString) throws IOException {
 
         ClientDetails clientDetails = objectMapper.readValue(clientDetailsString, BaseClientDetails.class);
         try {
-            ((JdbcClientDetailsService) clientDetailsService).addClientDetails(clientDetails);
+            ((EtcdClientDetailsService) clientDetailsService).addClientDetails(clientDetails);
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (ClientAlreadyExistsException caee) {
             caee.printStackTrace();
@@ -74,7 +73,7 @@ public class ClientDetailsController {
     public void deleteClientById(@PathVariable("id") String clientId) throws JsonProcessingException {
 
         try {
-            ((JdbcClientDetailsService) clientDetailsService).removeClientDetails(clientId);
+            ((EtcdClientDetailsService) clientDetailsService).removeClientDetails(clientId);
         } catch (NoSuchClientException nsce) {//do nothing
         }
 

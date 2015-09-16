@@ -18,6 +18,12 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>com.hp.gaia</groupId>
+            <artifactId>spring-oauth2-etcd-store</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- servlet, jax-rs -->
         <dependency>
             <groupId>javax.servlet</groupId>

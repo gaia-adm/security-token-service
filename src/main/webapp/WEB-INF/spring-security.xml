@@ -89,9 +89,9 @@
         <property name="tokenEnhancer" ref="customTokenEnhancer" />
     </bean>
 
-    <bean id="tokenStoreDB" class="org.springframework.security.oauth2.provider.token.store.JdbcTokenStore">
-        <constructor-arg name="dataSource" ref="dataSource" />
-    </bean>
+
+
+
 
     <bean id="customTokenEnhancer" class="com.hp.gaia.sts.util.CustomTokenEnhancer" />
 
@@ -121,10 +121,6 @@
 
     <oauth:resource-server id="resourceServerFilter"
                            resource-id="test" token-services-ref="tokenServices"/>
-
-    <bean id="clientDetailsDb" class="org.springframework.security.oauth2.provider.client.JdbcClientDetailsService">
-        <constructor-arg name="dataSource" ref="dataSource"/>
-    </bean>
 
     <sec:global-method-security
             pre-post-annotations="enabled" proxy-target-class="true">
@@ -157,5 +153,20 @@
     <bean id="h2WebServer" class="org.h2.tools.Server" factory-method="createWebServer" init-method="start" destroy-method="stop">
         <constructor-arg value="-web,-webAllowOthers,-webPort,9093"/>
     </bean>
+
+    <beans profile="db">
+        <bean id="clientDetailsDb" class="org.springframework.security.oauth2.provider.client.JdbcClientDetailsService">
+            <constructor-arg name="dataSource" ref="dataSource"/>
+        </bean>
+        <bean id="tokenStoreDB" class="org.springframework.security.oauth2.provider.token.store.JdbcTokenStore">
+            <constructor-arg name="dataSource" ref="dataSource" />
+        </bean>
+    </beans>
+    <beans profile="default">
+        <bean id="clientDetailsDb" class="org.springframework.security.oauth2.provider.client.EtcdClientDetailsService" />
+        <bean id="tokenStoreDB" class="org.springframework.security.oauth2.provider.token.store.EtcdTokenStore" />
+    </beans>
+
+
 
 </beans>
