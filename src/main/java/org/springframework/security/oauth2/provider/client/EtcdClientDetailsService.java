@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.util.*;
@@ -82,11 +83,11 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
     }
 
     public void updateClientDetails(ClientDetails clientDetails) throws NoSuchClientException {
-
+        throw new NotImplementedException();
     }
 
     public void updateClientSecret(String clientId, String secret) throws NoSuchClientException {
-
+        throw new NotImplementedException();
     }
 
     public void removeClientDetails(String clientId) throws NoSuchClientException {
@@ -94,6 +95,7 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
             etcdClient.delete(CD_PATH+clientId).send().get();
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
+            throw new NoSuchClientException("No client found with id = " + clientId);
         }
     }
 
