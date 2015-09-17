@@ -2,6 +2,7 @@ package com.hp.gaia.sts.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.gaia.sts.dto.Tenant;
+import com.hp.gaia.sts.util.EtcdClientCreator;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeysResponse;
@@ -20,6 +21,7 @@ public class TenantDaoEtcdImpl implements TenantDao {
 
     private final String T_PATH = "tenants/";
     private ObjectMapper objectMapper = new ObjectMapper();
+    private EtcdClient etcdClient = EtcdClientCreator.getInstance().getEtcdClient();
 
     @Override
     public void save(Tenant tenant) {
@@ -31,7 +33,7 @@ public class TenantDaoEtcdImpl implements TenantDao {
         tenant.setTenantId(generateTenantId(tenant.getAdminUserName()));
         tenant.setCreatedAt(System.currentTimeMillis());
 
-        try (EtcdClient etcdClient = new EtcdClient()) {
+        try {
             etcdClient.put(T_PATH + tenant.getTenantId(), objectMapper.writeValueAsString(tenant)).prevExist(false).send().get();
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
@@ -41,7 +43,7 @@ public class TenantDaoEtcdImpl implements TenantDao {
 
     @Override
     public void deleteById(long tenantId) {
-        try (EtcdClient etcdClient = new EtcdClient()) {
+        try {
             etcdClient.delete(T_PATH + tenantId).send().get();
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
@@ -53,7 +55,7 @@ public class TenantDaoEtcdImpl implements TenantDao {
     public Tenant getTenantById(long tenantId) {
 
         Tenant tenant = null;
-        try (EtcdClient etcdClient = new EtcdClient()) {
+        try {
             EtcdKeysResponse response = etcdClient.get(T_PATH + tenantId).send().get();
             tenant = new ObjectMapper().readValue(response.node.value, Tenant.class);
         } catch (IOException | TimeoutException | EtcdException e) {
@@ -66,7 +68,7 @@ public class TenantDaoEtcdImpl implements TenantDao {
     @Override
     public Tenant getTenantByAdminName(String name) {
 
-        try (EtcdClient etcdClient = new EtcdClient()) {
+        try {
             EtcdKeysResponse response = etcdClient.getDir(T_PATH).recursive().send().get();
             List<EtcdKeysResponse.EtcdNode> allTenants = response.node.nodes;
             for (EtcdKeysResponse.EtcdNode tenant : allTenants) {

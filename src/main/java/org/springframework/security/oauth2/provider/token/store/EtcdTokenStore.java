@@ -1,5 +1,6 @@
 package org.springframework.security.oauth2.provider.token.store;
 
+import com.hp.gaia.sts.util.EtcdClientCreator;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
@@ -32,9 +33,11 @@ import java.util.concurrent.TimeoutException;
 @Component
 public class EtcdTokenStore implements TokenStore {
 
-    private final String AT_PATH="accesstokens/";
+    private final String AT_PATH = "accesstokens/";
 
     private AuthenticationKeyGenerator authenticationKeyGenerator = new DefaultAuthenticationKeyGenerator();
+
+    private EtcdClient etcdClient = EtcdClientCreator.getInstance().getEtcdClient();
 
 
     public OAuth2Authentication readAuthentication(OAuth2AccessToken token) {
@@ -45,11 +48,11 @@ public class EtcdTokenStore implements TokenStore {
 
         OAuth2Authentication authentication = null;
 
-        try(EtcdClient etcdClient = new EtcdClient()) {
-            EtcdKeysResponse response = etcdClient.get(AT_PATH+extractTokenKey(token)).send().get();
+        try {
+            EtcdKeysResponse response = etcdClient.get(AT_PATH + extractTokenKey(token)).send().get();
             String[] elements = response.node.value.split(", ");
             authentication = deserializeAuthentication(Base64.decodeBase64(elements[5].split("=")[1]));
-        } catch (IOException | TimeoutException  | EtcdException e) {
+        } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
         }
 
@@ -79,12 +82,12 @@ public class EtcdTokenStore implements TokenStore {
             removeAccessToken(oToken.getValue());
         }
         //and recreate
-        try(EtcdClient etcdClient = new EtcdClient()){
+        try {
             //should be post, actually
             EtcdKeysResponse existenceResponce = etcdClient.put(AT_PATH + token_id, value).send().get();
             System.out.println(existenceResponce.node);
 
-        } catch (IOException | TimeoutException  | EtcdException e) {
+        } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
         }
 
@@ -95,14 +98,14 @@ public class EtcdTokenStore implements TokenStore {
 
         OAuth2AccessToken token = null;
 
-        try(EtcdClient etcdClient = new EtcdClient()){
+        try {
 
             EtcdKeysResponse existenceResponce = etcdClient.get(AT_PATH + extractTokenKey(tokenValue)).send().get();
             String[] elements = existenceResponce.node.value.split(",");
             token = deserializeAccessToken(Base64.decodeBase64(elements[1].split("=")[1]));
             System.out.println(existenceResponce.node);
 
-        } catch (IOException | TimeoutException  | EtcdException e) {
+        } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
         }
 
@@ -116,23 +119,23 @@ public class EtcdTokenStore implements TokenStore {
 
 
         String key = authenticationKeyGenerator.extractKey(authentication);
-        try (EtcdClient etcdClient = new EtcdClient()){
+        try {
             EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.getDir(AT_PATH).recursive().send();
             EtcdKeysResponse response = promise.get();
             List<EtcdKeysResponse.EtcdNode> allClients = response.node.nodes;
-            for(EtcdKeysResponse.EtcdNode client : allClients){
-                if(client.value.contains(key)){
+            for (EtcdKeysResponse.EtcdNode client : allClients) {
+                if (client.value.contains(key)) {
                     String[] elements = client.value.split(",");
                     accessToken = deserializeAccessToken(Base64.decodeBase64(elements[1].split("=")[1]));
 
                 }
             }
-            if(accessToken != null && !key.equals(authenticationKeyGenerator.extractKey(readAuthentication(accessToken.getValue())))){
+            if (accessToken != null && !key.equals(authenticationKeyGenerator.extractKey(readAuthentication(accessToken.getValue())))) {
                 removeAccessToken(accessToken.getValue());
                 storeAccessToken(accessToken, authentication);
             }
 
-        } catch (IOException | TimeoutException  | EtcdException e) {
+        } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
         }
 
@@ -146,9 +149,9 @@ public class EtcdTokenStore implements TokenStore {
 
     public void removeAccessToken(String tokenValue) {
 
-        try(EtcdClient etcdClient = new EtcdClient()){
+        try {
             etcdClient.delete(AT_PATH + extractTokenKey(tokenValue)).send().get();
-        } catch (IOException | TimeoutException  | EtcdException e) {
+        } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
         }
     }

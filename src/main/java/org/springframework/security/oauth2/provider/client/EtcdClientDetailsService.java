@@ -1,6 +1,7 @@
 package org.springframework.security.oauth2.provider.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hp.gaia.sts.util.EtcdClientCreator;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
@@ -29,6 +30,8 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
 
     private PasswordEncoder passwordEncoder = NoOpPasswordEncoder.getInstance();
 
+    private EtcdClient etcdClient = EtcdClientCreator.getInstance().getEtcdClient();
+
     /**
      * @param passwordEncoder the password encoder to set
      */
@@ -39,7 +42,7 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
     public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
 
         ClientDetails clientDetails;
-        try (EtcdClient etcdClient = new EtcdClient()) {
+        try {
             EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.get(CD_PATH + clientId).send();
             EtcdKeysResponse response = promise.get();
             clientDetails = createClientDetails(response.node.value);
@@ -58,7 +61,7 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
 
     public void addClientDetails(ClientDetails clientDetails) throws ClientAlreadyExistsException {
 
-        try (EtcdClient etcdClient = new EtcdClient()) {
+        try {
             String cd = Arrays.toString(getFields(clientDetails));
             System.out.println(System.currentTimeMillis() + ": 1");
             EtcdResponsePromise<EtcdKeysResponse> response = etcdClient.put(CD_PATH + clientDetails.getClientId(), cd).prevExist(false).send();
@@ -87,7 +90,7 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
     }
 
     public void removeClientDetails(String clientId) throws NoSuchClientException {
-        try (EtcdClient etcdClient = new EtcdClient()){
+        try {
             etcdClient.delete(CD_PATH+clientId).send().get();
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
@@ -98,7 +101,7 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
 
         List<ClientDetails> allClientDetails = new ArrayList<>();
 
-        try (EtcdClient etcdClient = new EtcdClient()) {
+        try {
             EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.getDir(CD_PATH).recursive().send();
             EtcdKeysResponse response = promise.get();
             List<EtcdKeysResponse.EtcdNode> allClients = response.node.nodes;

@@ -5,6 +5,7 @@ PERSISTENCE:
 - or can be selected by environment variable: SPRING_PROFILES_ACTIVE=db or SPRING_PROFILES_ACTIVE=default (latter - optional)
 - with -Dspring.profiles.active=db, local H2 DB serves as persistence (see below)
 - without any profile activation or with -Dspring.profiles.active=default etcd serves as persistence
+- etcdUrl environment variable used to set the Etcd location. Complete URL should be passed (http://11.22.33.44:1234); if not set, default used (http://127.0.0.1:4001)
 
 
 ## Authorization server based on spring security.
