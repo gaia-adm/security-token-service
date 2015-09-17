@@ -12,7 +12,7 @@ dependencies:
     - docker build -t gaiaadm/sts .
 test:
   override:
-    - docker run -d -p 9001:8080 gaiaadm/sts:$BUILD_TAG; sleep 10
+    - docker run -d -p 9001:8080 -e SPRING_PROFILES_ACTIVE=db gaiaadm/sts:$BUILD_TAG; sleep 10
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
     - ./SystemTestCurl.sh
 deployment:
@@ -22,8 +22,5 @@ deployment:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push gaiaadm/sts
 general:
-  branches:
-    only:
-      - master
   artifacts:
     - target/sts.war

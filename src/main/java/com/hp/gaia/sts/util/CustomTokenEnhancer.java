@@ -31,13 +31,14 @@ public class CustomTokenEnhancer implements TokenEnhancer {
 
         //not found client exception is handled internally in JdbcClientDetailsService
         ClientDetails clientDetails = clientDetailsService.loadClientByClientId(authentication.getPrincipal().toString());
-        Object tenantId = clientDetails.getAdditionalInformation().get("tenantId");
+        Number tenantId = (Number) clientDetails.getAdditionalInformation().get("tenantId");
         if(tenantId == null){
             System.out.println("Client cannot be used, no tenantId set; client should be re-created: " + authentication.getPrincipal());
             throw new UnapprovedClientAuthenticationException("Client configuration is wrong, the token cannot be created");
         }
 
-        Tenant tenant = tenantDao.getTenantById((Integer) tenantId);
+
+        Tenant tenant = tenantDao.getTenantById(tenantId.longValue());
 
         Map<String, Object> map = new HashMap<>();
         map.put("tenantId", tenant.getTenantId());

@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 public class CustomTokenEnhancerTest {
 
     private final static String TENANT_ID_PROP_NAME = "tenantId";
-    private final static Integer TENANT_ID = 12345;
+    private final static Long TENANT_ID = 12345L;
     private final static String TENANT_ADMIN_USER_NAME="admin@hp.com";
 
     CustomTokenEnhancer enhancer;

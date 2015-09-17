@@ -145,16 +145,15 @@
         <property name="poolPreparedStatements" value="true" />
     </bean>
 
-    <bean id="tenantDao" class="com.hp.gaia.sts.dao.TenantDaoImpl">
-        <constructor-arg ref="dataSource"/>
-    </bean>
-
     <!-- H2 DB Web Console -->
     <bean id="h2WebServer" class="org.h2.tools.Server" factory-method="createWebServer" init-method="start" destroy-method="stop">
         <constructor-arg value="-web,-webAllowOthers,-webPort,9093"/>
     </bean>
 
     <beans profile="db">
+        <bean id="tenantDao" class="com.hp.gaia.sts.dao.TenantDaoImpl">
+            <constructor-arg ref="dataSource"/>
+        </bean>
         <bean id="clientDetailsDb" class="org.springframework.security.oauth2.provider.client.JdbcClientDetailsService">
             <constructor-arg name="dataSource" ref="dataSource"/>
         </bean>
@@ -163,6 +162,7 @@
         </bean>
     </beans>
     <beans profile="default">
+        <bean id="tenantDao" class="com.hp.gaia.sts.dao.TenantDaoEtcdImpl " />
         <bean id="clientDetailsDb" class="org.springframework.security.oauth2.provider.client.EtcdClientDetailsService" />
         <bean id="tokenStoreDB" class="org.springframework.security.oauth2.provider.token.store.EtcdTokenStore" />
     </beans>

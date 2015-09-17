@@ -5,7 +5,7 @@ package com.hp.gaia.sts.dto;
  */
 public class Tenant {
 
-    private int tenantId;
+    private long tenantId;
     private String adminUserName;
     private long createdAt;
 
@@ -17,11 +17,11 @@ public class Tenant {
     public Tenant(){
     }
 
-    public int getTenantId() {
+    public long getTenantId() {
         return tenantId;
     }
 
-    public void setTenantId(int tenantId) {
+    public void setTenantId(long tenantId) {
         this.tenantId = tenantId;
     }
 

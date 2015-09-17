@@ -2,13 +2,11 @@ package com.hp.gaia.sts.dao;
 
 import com.hp.gaia.sts.dto.Tenant;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
 
 import javax.sql.DataSource;
-import java.sql.*;
-import java.text.DateFormat;
-import java.util.List;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * Created by belozovs on 6/25/2015.
@@ -36,12 +34,12 @@ public class TenantDaoImpl implements TenantDao {
     }
 
     @Override
-    public void deleteById(int tenantId) {
+    public void deleteById(long tenantId) {
         jdbcTemplate.update(deleteTenantSql, new Object[]{tenantId});
     }
 
     @Override
-    public Tenant getTenantById(int tenantId) {
+    public Tenant getTenantById(long tenantId) {
 
         String selectTenantSqlById = selectTenantSql + " where tenant_id = ?";
         return jdbcTemplate.queryForObject(selectTenantSqlById, new Object[]{tenantId}, new TenantRowMapper());

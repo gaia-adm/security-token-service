@@ -2,6 +2,7 @@ CircleCI build status: [![Circle CI](https://circleci.com/gh/gaia-adm/security-t
 
 PERSISTENCE:
 - selected by -Dspring.profiles.active=db or -Dspring.profiles.active=default (latter - optional)
+- or can be selected by environment variable: SPRING_PROFILES_ACTIVE=db or SPRING_PROFILES_ACTIVE=default (latter - optional)
 - with -Dspring.profiles.active=db, local H2 DB serves as persistence (see below)
 - without any profile activation or with -Dspring.profiles.active=default etcd serves as persistence
 

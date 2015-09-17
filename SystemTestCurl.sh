@@ -19,6 +19,7 @@ curl -i -X DELETE http://localhost:9001/sts/oauth/client/$CLIENT_NAME | grep '20
 validate $? 'SUCCESS: OAUTH_CLIENT_DETAILS table is clean' 'ERROR: Failed to clean OAUTH_CLIENT_DETAILS table'
 TENANT_ID=$(curl -H "Accept: application/json" http://localhost:9001/sts/tenant?user=$TENANT_ADMIN_NAME | grep 'tenantId' | sed s/,/\\n/g | grep 'tenantId' | sed -s 's/"tenantId":\(.*\)/\1/'  | sed -r 's/\{//g')
 if [ ! -z "$TENANT_ID" ]; then
+   echo Deleting tenant $TENANT_ID
    curl -i -X DELETE http://localhost:9001/sts/tenant/$TENANT_ID  | grep '204 No Content'
    validate $? 'SUCCESS: TENANT table is clean' 'ERROR: Failed to clean TENANT table'
 fi
@@ -29,6 +30,7 @@ validate $? 'SUCCESS: Tenant created successfully by admin '$TENANT_ADMIN_NAME '
 
 ##### get tenant id for further usage
 TENANT_ID=$(curl -H "Accept: application/json" http://localhost:9001/sts/tenant?user=$TENANT_ADMIN_NAME | grep 'tenantId' | sed s/,/\\n/g | grep 'tenantId' | sed -s 's/"tenantId":\(.*\)/\1/'  | sed -r 's/\{//g')
+echo Using tenant $TENANT_ID
 validate $? 'SUCCESS: Successfully got tenant data with admin user '$TENANT_ADMIN_NAME', its id is '$TENANT_ID 'ERROR: Cannot get tenant id for tenant with admin user '$TENANT_ADMIN_NAME
 
 ##### create client

@@ -61,7 +61,7 @@ public class TenantController {
     @RequestMapping(value = "/tenant/{tenantId}", method = RequestMethod.DELETE)
     @ResponseBody
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTenantByName(@PathVariable("tenantId") Integer tenantId){
+    public void deleteTenantByName(@PathVariable("tenantId") Long tenantId){
 
         try{
             tenantDao.deleteById(tenantId);

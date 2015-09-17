@@ -11,9 +11,9 @@ import java.util.List;
 public interface TenantDao {
 
     public void save(Tenant tenant);
-    public void deleteById(int tenantId);
+    public void deleteById(long tenantId);
 
-    public Tenant getTenantById(int tenantId);
+    public Tenant getTenantById(long tenantId);
     public Tenant getTenantByAdminName(String name);
 
 }
