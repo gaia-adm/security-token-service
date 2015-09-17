@@ -1,19 +1,15 @@
 CircleCI build status: [![Circle CI](https://circleci.com/gh/gaia-adm/security-token-service.svg?style=svg)](https://circleci.com/gh/gaia-adm/security-token-service)
 
-PERSISTENCE:
-- selected by -Dspring.profiles.active=db or -Dspring.profiles.active=default (latter - optional)
-- or can be selected by environment variable: SPRING_PROFILES_ACTIVE=db or SPRING_PROFILES_ACTIVE=default (latter - optional)
-- with -Dspring.profiles.active=db, local H2 DB serves as persistence (see below)
-- without any profile activation or with -Dspring.profiles.active=default etcd serves as persistence
-- etcdUrl environment variable used to set the Etcd location. Complete URL should be passed (http://11.22.33.44:1234); if not set, default used (http://127.0.0.1:4001)
-
-
 ## Authorization server based on spring security.
 - Supports Client Credentials flow of Oauth2 (https://tools.ietf.org/html/rfc6749#section-4.4)
 - Runs on any servlet container or with Jetty embedded (mvn jetty:run on port 9001)
-- Running with H2 DB embedded for persisting client configuration and access tokens.
-  Schema name is auth_db under your user home folder. The schema is created upon creation of the 1st client
+
+## Persistence layer
+- Supports Etcd and H2 embedded
+- Selected using environment variable: SPRING_PROFILES_ACTIVE=default (optional, works with Etcd if nothing provided) or SPRING_PROFILES_ACTIVE=db (mandatory for working with H2)
+- When H2 database selected, DB file named sts_db sits locally under user home folder. The schema is created upon creation of the 1st client
 - H2 DB accessible via the web console: http://localhost:9093/ (select H2 embedded, URL: jdbc:h2:~/sts_db)
+- etcdUrl environment variable used to set the Etcd location. Complete URL should be passed (http://11.22.33.44:1234); if not set, default used (http://127.0.0.1:4001)
 
 ## Notes:
 - Token never expires (can be revoked)
