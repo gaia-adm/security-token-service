@@ -16,7 +16,7 @@ test:
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
     - ./SystemTestCurl.sh
     - docker stop sts
-    - docker rm sts
+    - sudo docker rm sts
     - curl -L  https://github.com/coreos/etcd/releases/download/v2.2.0/etcd-v2.2.0-linux-amd64.tar.gz -o etcd-v2.2.0-linux-amd64.tar.gz
     - tar xzvf etcd-v2.2.0-linux-amd64.tar.gz
     - cd etcd-v2.2.0-linux-amd64
