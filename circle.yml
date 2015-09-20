@@ -2,13 +2,14 @@ machine:
   services:
     - docker
 dependencies:
-  override:
+  pre:
     - curl -L  https://github.com/coreos/etcd/releases/download/v2.2.0/etcd-v2.2.0-linux-amd64.tar.gz -o etcd-v2.2.0-linux-amd64.tar.gz
     - tar xzvf etcd-v2.2.0-linux-amd64.tar.gz
     - cd etcd-v2.2.0-linux-amd64
     - ./etcd:
         background: true
     - sleep 5
+  override:
     - cp Dockerfile Dockerfile.run
     - cp Dockerfile.build Dockerfile
     - docker build -t build-img .
@@ -22,7 +23,7 @@ test:
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
     - ./SystemTestCurl.sh
     - docker stop stsdb
-    - docker run -d --name stsetcd -p 9001:8080 -e etcdUrl=$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1) gaiaadm/sts:$BUILD_TAG; sleep 10
+    - docker run -d --name stsetcd -p 9001:8080 -e etcdUrl=http://$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1):4001 gaiaadm/sts:$BUILD_TAG; sleep 10
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
     - ./SystemTestCurl.sh
 deployment:
