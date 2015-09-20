@@ -8,6 +8,7 @@ machine:
     - ./etcd --debug -advertise-client-urls=http://0.0.0.0:2379 -listen-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001 :
         background: true
     - sleep 5
+    - curl -i http://$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1):4001/version
 dependencies:
   override:
     - cp Dockerfile Dockerfile.run
