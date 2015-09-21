@@ -14,11 +14,6 @@ CircleCI build status: [![Circle CI](https://circleci.com/gh/gaia-adm/security-t
 ## Notes:
 - Token never expires (can be revoked)
 
-## Current limitations/not implemented yet:
-- No deployment via fleetctl
-- Distinguish between tenants/schemas based on token (token enrichment?)
-- Client authentication is missing when requesting token or registering client
-
 ## Manually run with docker 
 - docker build -t sts_build -f Dockerfile.build .
 - Optional: docker rm build_cont
