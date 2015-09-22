@@ -1,8 +1,9 @@
 #!/bin/bash
+# simplified version of SystemTestCurl.sh that doesn't cleanup after itself to allow configuration of agent against Gaia
 
-CLIENT_NAME="restapp"
+CLIENT_NAME="gaia_agent"
 CLIENT_SECRET="secret"
-TENANT_ADMIN_NAME="foo@hp.com"
+TENANT_ADMIN_NAME="gaia_agent@hp.com"
 
 # Format: validate $? <good_message> <bad_message>
 function validate {
@@ -48,17 +49,3 @@ validate $? 'SUCCESS: Successfully created access_token for client '$CLIENT_NAME
 #### validate token
 curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=$TOKEN | grep '200 OK'
 validate $? 'SUCCESS: Token '$TOKEN' is valid' 'ERROR: Token '$TOKEN' is invalid'
-
-#### revoke token
-curl -i -X DELETE http://localhost:9001/sts/oauth/token/revoke?token=$TOKEN | grep '200 OK'
-validate $? 'SUCCESS: Token '$TOKEN' revoked successfully' 'ERROR: Failed to revoke token '$TOKEN
-
-#### validate after revoking
-curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=$TOKEN | grep '400 Bad Request'
-validate $? 'SUCCESS: Token '$TOKEN' is invalid after revoking' 'ERROR: Token '$TOKEN' is still valid after revoking'
-
-#### DB cleanup to enable re-run
-curl -i -X DELETE http://localhost:9001/sts/oauth/client/$CLIENT_NAME | grep '204 No Content'
-validate $? 'SUCCESS: OAUTH_CLIENT_DETAILS table is clean' 'ERROR: Failed to clean OAUTH_CLIENT_DETAILS table'
-curl -i -X DELETE http://localhost:9001/sts/tenant/$TENANT_ID  | grep '204 No Content'
-validate $? 'SUCCESS: TENANT table is clean' 'ERROR: Failed to clean TENANT table'
