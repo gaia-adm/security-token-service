@@ -13,9 +13,10 @@ dependencies:
     - docker cp build-cont:/usr/local/gaia/target/sts.war ./target/sts.war
     - cp Dockerfile.run Dockerfile
     - docker build -t gaiaadm/sts .
+    - docker tag gaiaadm/sts gaiaadm/sts:$CIRCLE_BUILD_NUM
 test:
   override:
-    - docker run --name stsdb -d -p 9001:8080 -e SPRING_PROFILES_ACTIVE=db gaiaadm/sts:$BUILD_TAG; sleep 10
+    - docker run --name stsdb -d -p 9001:8080 -e SPRING_PROFILES_ACTIVE=db gaiaadm/sts; sleep 10
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
     - ./SystemTestCurl.sh
     - docker stop stsdb
