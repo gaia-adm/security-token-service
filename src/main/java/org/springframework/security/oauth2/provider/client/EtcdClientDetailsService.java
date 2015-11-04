@@ -2,6 +2,7 @@ package org.springframework.security.oauth2.provider.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.gaia.sts.util.EtcdClientCreator;
+import com.hp.gaia.sts.util.EtcdPaths;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
@@ -27,7 +28,6 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
 
 
     private ObjectMapper mapper = new ObjectMapper();
-    private final String CD_PATH = "clientdetails/";
 
     private PasswordEncoder passwordEncoder = NoOpPasswordEncoder.getInstance();
 
@@ -44,7 +44,7 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
 
         ClientDetails clientDetails;
         try {
-            EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.get(CD_PATH + clientId).send();
+            EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.get(EtcdPaths.CD_PATH + clientId).send();
             EtcdKeysResponse response = promise.get();
             clientDetails = createClientDetails(response.node.value);
             return clientDetails;
@@ -65,7 +65,7 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
         try {
             String cd = Arrays.toString(getFields(clientDetails));
             System.out.println(System.currentTimeMillis() + ": 1");
-            EtcdResponsePromise<EtcdKeysResponse> response = etcdClient.put(CD_PATH + clientDetails.getClientId(), cd).prevExist(false).send();
+            EtcdResponsePromise<EtcdKeysResponse> response = etcdClient.put(EtcdPaths.CD_PATH + clientDetails.getClientId(), cd).prevExist(false).send();
             System.out.println(System.currentTimeMillis() + ": 2");
             response.get();
             System.out.println(System.currentTimeMillis() + ": 3");
@@ -91,8 +91,24 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
     }
 
     public void removeClientDetails(String clientId) throws NoSuchClientException {
+
         try {
-            etcdClient.delete(CD_PATH+clientId).send().get();
+            EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.getDir(EtcdPaths.AT_PATH).send();
+            EtcdKeysResponse response = promise.get();
+            for (EtcdKeysResponse.EtcdNode node : response.node.nodes) {
+                if (compareClient(node.value, clientId)) {
+                    etcdClient.delete(node.key).send().get();
+                    //we only have single token per client, no more need to iterate
+                    break;
+                }
+            }
+        } catch (IOException | TimeoutException | EtcdException e) {
+            e.printStackTrace();
+            System.out.println("Tokens cleanup for client " + clientId + " failed. It may be OK, if no tokens created yet");
+        }
+
+        try {
+            etcdClient.delete(EtcdPaths.CD_PATH + clientId).send().get();
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
             throw new NoSuchClientException("No client found with id = " + clientId);
@@ -104,10 +120,10 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
         List<ClientDetails> allClientDetails = new ArrayList<>();
 
         try {
-            EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.getDir(CD_PATH).recursive().send();
+            EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.getDir(EtcdPaths.CD_PATH).recursive().send();
             EtcdKeysResponse response = promise.get();
             List<EtcdKeysResponse.EtcdNode> allClients = response.node.nodes;
-            for(EtcdKeysResponse.EtcdNode client : allClients){
+            for (EtcdKeysResponse.EtcdNode client : allClients) {
                 allClientDetails.add(createClientDetails(client.value));
             }
             return allClientDetails;
@@ -178,5 +194,19 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
             }
         }
         return details;
+    }
+
+    //Example of value:
+    //token_id=8137b9787bd8c8454ee13bce42197621, token=rO0...TIxMTI=, authentication_id=3bf46c7dd13fa987862a1b40379a23cc, user_name=null, client_id=restapp, authentication=rO0...HA=, refresh_token=null
+    private boolean compareClient(String value, String clientId) {
+        int pos = value.indexOf("client_id");
+        if (pos != -1) {
+            String substr = value.substring(pos).split(",")[0];
+            String tokenClient = substr.split("=")[1];
+            if (tokenClient.equals(clientId)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

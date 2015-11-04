@@ -57,8 +57,14 @@ validate $? 'SUCCESS: Token '$TOKEN' revoked successfully' 'ERROR: Failed to rev
 curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=$TOKEN | grep '400 Bad Request'
 validate $? 'SUCCESS: Token '$TOKEN' is invalid after revoking' 'ERROR: Token '$TOKEN' is still valid after revoking'
 
+#### create token again to validate it is removed when client deleted
+TOKEN=$(curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST "http://localhost:9001/sts/oauth/token?grant_type=client_credentials&client_id=$CLIENT_NAME&client_secret=$CLIENT_SECRET" | grep 'access_token' | sed s/,/\\n/g | grep 'access_token' | sed -s 's/"access_token":\(.*\)/\1/'  | sed -r 's/\{//g' | sed -r 's/\"//g')
+validate $? 'SUCCESS: Successfully created access_token for client '$CLIENT_NAME', its value is '$TOKEN 'ERROR: Cannot create access_token for client '$CLIENT_NAME
+
 #### DB cleanup to enable re-run
 curl -i -X DELETE http://localhost:9001/sts/oauth/client/$CLIENT_NAME | grep '204 No Content'
 validate $? 'SUCCESS: OAUTH_CLIENT_DETAILS table is clean' 'ERROR: Failed to clean OAUTH_CLIENT_DETAILS table'
+curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=$TOKEN | grep '400 Bad Request'
+validate $? 'SUCCESS: Token '$TOKEN' is deleted after client deletion' 'ERROR: Token '$TOKEN' is still existing after client deletion'
 curl -i -X DELETE http://localhost:9001/sts/tenant/$TENANT_ID  | grep '204 No Content'
 validate $? 'SUCCESS: TENANT table is clean' 'ERROR: Failed to clean TENANT table'
