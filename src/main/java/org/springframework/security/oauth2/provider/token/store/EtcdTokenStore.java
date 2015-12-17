@@ -134,7 +134,9 @@ public class EtcdTokenStore implements TokenStore {
                 storeAccessToken(accessToken, authentication);
             }
 
-        } catch (IOException | TimeoutException | EtcdException e) {
+        } catch (EtcdException e) {
+            e.printStackTrace();
+        } catch (IOException | TimeoutException e) {
             e.printStackTrace();
             throw new RuntimeException("Error occurred, please see log files for more details");
         }
