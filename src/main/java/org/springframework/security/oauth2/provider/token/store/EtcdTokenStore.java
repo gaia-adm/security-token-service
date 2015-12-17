@@ -136,6 +136,7 @@ public class EtcdTokenStore implements TokenStore {
 
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error occurred, please see log files for more details");
         }
 
         return accessToken;
