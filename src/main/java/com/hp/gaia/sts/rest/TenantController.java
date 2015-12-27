@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.gaia.sts.dao.TenantDao;
 import com.hp.gaia.sts.dto.Tenant;
-import com.sun.java.browser.dom.DOMAccessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,9 +17,12 @@ import java.io.IOException;
 
 /**
  * Created by belozovs on 6/25/2015.
+ *
  */
 @Controller
 public class TenantController {
+
+    private final static Logger logger = LoggerFactory.getLogger(TenantController.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -33,6 +36,10 @@ public class TenantController {
         try {
             Tenant tenant = objectMapper.readValue(jsonTenant, Tenant.class);
             tenantDao.save(tenant);
+            Tenant created = tenantDao.getTenantByAdminName(tenant.getAdminUserName());
+            if (created != null) {
+                logger.info("Tenant {} created successfully", created.getTenantId());
+            }
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (DataAccessException dae) {
             dae.printStackTrace();
@@ -49,7 +56,7 @@ public class TenantController {
         try {
             Tenant tenant = tenantDao.getTenantByAdminName(adminUserName);
             return new ResponseEntity<>(objectMapper.writeValueAsString(tenant), HttpStatus.OK);
-        } catch (DataAccessException dae){
+        } catch (DataAccessException dae) {
             dae.printStackTrace();
             return new ResponseEntity<>("Tenant not found with the name provided", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (JsonProcessingException jpe) {
@@ -61,14 +68,14 @@ public class TenantController {
     @RequestMapping(value = "/tenant/{tenantId}", method = RequestMethod.DELETE)
     @ResponseBody
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTenantByName(@PathVariable("tenantId") Long tenantId){
+    public void deleteTenantByName(@PathVariable("tenantId") Long tenantId) {
 
-        try{
+        try {
             tenantDao.deleteById(tenantId);
-        } catch (EmptyResultDataAccessException erdae) {
-            //do nothing
+            logger.info("Tenant {} deleted successfully", tenantId);
+        } catch (DataAccessException dae) {
+            logger.error("Failed to delete tenant {}", tenantId);
         }
-
     }
 
 }

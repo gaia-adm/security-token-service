@@ -7,6 +7,7 @@ import com.hp.gaia.sts.util.EtcdPaths;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeysResponse;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class TenantDaoEtcdImpl implements TenantDao {
             etcdClient.put(EtcdPaths.T_PATH + tenant.getTenantId(), objectMapper.writeValueAsString(tenant)).prevExist(false).send().get();
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
+            throw new DataAccessResourceFailureException(e.getMessage());
         }
 
     }
@@ -47,6 +49,7 @@ public class TenantDaoEtcdImpl implements TenantDao {
             etcdClient.delete(EtcdPaths.T_PATH + tenantId).send().get();
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
+            throw new DataAccessResourceFailureException(e.getMessage());
         }
 
     }
