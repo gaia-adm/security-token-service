@@ -1,6 +1,4 @@
-[![](https://badge.imagelayers.io/gaiaadm/sts:latest.svg)](https://imagelayers.io/?images=gaiaadm/sts:latest 'Get your own badge on imagelayers.io')
-
-*CircleCI:* [![Circle CI](https://circleci.com/gh/gaia-adm/security-token-service.svg?style=svg)](https://circleci.com/gh/gaia-adm/security-token-service)
+[![Circle CI](https://circleci.com/gh/gaia-adm/security-token-service.svg?style=svg)](https://circleci.com/gh/gaia-adm/security-token-service) [![Codacy Badge](https://api.codacy.com/project/badge/grade/bf60fae53bbf4f2daf6d044c1655e924)](https://www.codacy.com/app/alexei-led/security-token-service) [![](https://badge.imagelayers.io/gaiaadm/sts:latest.svg)](https://imagelayers.io/?images=gaiaadm/sts:latest 'Get your own badge on imagelayers.io')
 
 ## Authorization server based on spring security.
 - Supports Client Credentials flow of Oauth2 (https://tools.ietf.org/html/rfc6749#section-4.4)
