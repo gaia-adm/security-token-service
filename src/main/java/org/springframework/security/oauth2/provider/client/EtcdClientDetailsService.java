@@ -3,6 +3,7 @@ package org.springframework.security.oauth2.provider.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.gaia.sts.util.EtcdClientCreator;
 import com.hp.gaia.sts.util.EtcdPaths;
+import com.hp.gaia.sts.util.TokenStorageException;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
@@ -50,10 +51,10 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
             return clientDetails;
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("IOException happened");
+            throw new TokenStorageException("IOException happened");
         } catch (TimeoutException e) {
             e.printStackTrace();
-            throw new RuntimeException("Timeout occurred when tried to get client details for " + clientId);
+            throw new TokenStorageException("Timeout occurred when tried to get client details for " + clientId);
         } catch (EtcdException e) {
             e.printStackTrace();
             throw new NoSuchClientException("No client details found for client id " + clientId);
@@ -71,10 +72,10 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
             System.out.println(System.currentTimeMillis() + ": 3");
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to create client: " + e.getMessage());
+            throw new TokenStorageException("Failed to create client: " + e.getMessage());
         } catch (TimeoutException e) {
             e.printStackTrace();
-            throw new RuntimeException("Timeout occurred when tried to create client");
+            throw new TokenStorageException("Timeout occurred when tried to create client");
         } catch (EtcdException e) {
             e.printStackTrace();
             throw new ClientAlreadyExistsException("Client " + clientDetails.getClientId() + " already exists");
@@ -129,7 +130,7 @@ public class EtcdClientDetailsService implements ClientDetailsService, ClientReg
             return allClientDetails;
         } catch (IOException | TimeoutException | EtcdException e) {
             e.printStackTrace();
-            throw new RuntimeException("Change it to something more elegance");
+            throw new TokenStorageException("Change it to something more elegance");
         }
     }
 
