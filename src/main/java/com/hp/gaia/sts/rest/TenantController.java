@@ -27,7 +27,7 @@ public class TenantController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
-    TenantDao tenantDao;
+    private TenantDao tenantDao;
 
     @RequestMapping(value = "/tenant", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
     @ResponseBody

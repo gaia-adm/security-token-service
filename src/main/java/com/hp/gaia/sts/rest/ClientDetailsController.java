@@ -23,7 +23,7 @@ public class ClientDetailsController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
-    ClientDetailsService clientDetailsService;
+    private ClientDetailsService clientDetailsService;
 
     @RequestMapping(value = "/oauth/client/{id}", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody

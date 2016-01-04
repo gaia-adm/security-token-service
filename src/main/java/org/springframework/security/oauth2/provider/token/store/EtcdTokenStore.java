@@ -2,6 +2,7 @@ package org.springframework.security.oauth2.provider.token.store;
 
 import com.hp.gaia.sts.util.EtcdClientCreator;
 import com.hp.gaia.sts.util.EtcdPaths;
+import com.hp.gaia.sts.util.TokenStorageException;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
@@ -138,7 +139,7 @@ public class EtcdTokenStore implements TokenStore {
             e.printStackTrace();
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
-            throw new RuntimeException("Error occurred, please see log files for more details");
+            throw new TokenStorageException("Error occurred, please see log files for more details");
         }
 
         return accessToken;

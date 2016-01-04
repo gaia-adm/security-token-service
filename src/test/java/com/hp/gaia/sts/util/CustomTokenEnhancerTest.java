@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,25 +22,27 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Created by belozovs on 6/28/2015.
+ *
  */
 public class CustomTokenEnhancerTest {
 
     private final static String TENANT_ID_PROP_NAME = "tenantId";
     private final static Long TENANT_ID = 12345L;
-    private final static String TENANT_ADMIN_USER_NAME="admin@hp.com";
+    private final static String TENANT_ADMIN_USER_NAME = "admin@hp.com";
 
-    CustomTokenEnhancer enhancer;
-    ClientDetailsService clientDetailsService;
-    ClientDetails clientDetails;
-    Map<String, Object> additionalInfo = new HashMap<>();
-    TenantDao tenantDao;
+    private Map<String, Object> additionalInfo = new HashMap<>();
+    private OAuth2AccessToken accessToken = new DefaultOAuth2AccessToken("myvalue");
 
-    OAuth2AccessToken accessToken = new DefaultOAuth2AccessToken("myvalue");
-    OAuth2Authentication authentication;
+    private ClientDetails clientDetails;
+    private ClientDetailsService clientDetailsService;
+    private TenantDao tenantDao;
+    private OAuth2Authentication authentication;
+
+    private CustomTokenEnhancer enhancer;
+
 
     @Before
     public void setUp() throws Exception {
-
         additionalInfo.put(TENANT_ID_PROP_NAME, TENANT_ID);
 
         authentication = createNiceMock(OAuth2Authentication.class);
@@ -48,8 +51,8 @@ public class CustomTokenEnhancerTest {
         tenantDao = createNiceMock(TenantDaoImpl.class);
 
         enhancer = new CustomTokenEnhancer();
-        enhancer.clientDetailsService = clientDetailsService;
-        enhancer.tenantDao = tenantDao;
+        ReflectionTestUtils.setField(enhancer, "clientDetailsService", clientDetailsService, ClientDetailsService.class);
+        ReflectionTestUtils.setField(enhancer, "tenantDao", tenantDao, TenantDao.class);
     }
 
     @Test
