@@ -33,6 +33,9 @@ test:
     - docker run -d --name stsetcd -p 9001:8080 -e etcdUrl=http://$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1):4001 gaiaadm/sts:$BUILD_TAG; sleep 10
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
     - ./SystemTestCurl.sh
+  post:
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
+    - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
 deployment:
   hub:
     branch: master

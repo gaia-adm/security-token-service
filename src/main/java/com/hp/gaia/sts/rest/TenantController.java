@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 
 /**
@@ -28,6 +29,11 @@ public class TenantController {
 
     @Autowired
     private TenantDao tenantDao;
+
+    @PostConstruct
+    void TestMethod(){
+        logger.warn("Starting sts successfully!");
+    }
 
     @RequestMapping(value = "/tenant", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
     @ResponseBody
