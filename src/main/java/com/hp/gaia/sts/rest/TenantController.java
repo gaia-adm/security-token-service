@@ -30,11 +30,6 @@ public class TenantController {
     @Autowired
     private TenantDao tenantDao;
 
-    @PostConstruct
-    void TestMethod(){
-        logger.warn("Starting sts successfully!");
-    }
-
     @RequestMapping(value = "/tenant", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
     @ResponseBody
     public ResponseEntity<String> createTenant(@RequestBody String jsonTenant) {
