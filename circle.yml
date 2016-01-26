@@ -2,7 +2,7 @@ machine:
 # pre section is a workaround for https://discuss.circleci.com/t/unable-to-use-docker-cp-but-it-worked-2-days-ago/1137/9
   pre:
     - echo 'DOCKER_OPTS="-s btrfs -e lxc -D --userland-proxy=false"' | sudo tee -a /etc/default/docker
-    - sudo curl -L -o /usr/bin/docker 'https://s3-external-1.amazonaws.com/circle-downloads/docker-1.9.0-circleci-cp-workaround'
+    - sudo curl -L -o /usr/bin/docker 'https://s3-external-1.amazonaws.com/circle-downloads/docker-1.9.1-circleci-cp-workaround'
     - sudo chmod 0755 /usr/bin/docker
   services:
     - docker
@@ -10,6 +10,10 @@ machine:
     - curl -L  https://github.com/coreos/etcd/releases/download/v2.2.0/etcd-v2.2.0-linux-amd64.tar.gz -o etcd-v2.2.0-linux-amd64.tar.gz
     - tar xzvf etcd-v2.2.0-linux-amd64.tar.gz
 dependencies:
+  pre:
+    - sudo apt-get update && sudo apt-get install jq openssl
+    # download update_service script
+    - curl -LO https://raw.githubusercontent.com/gaia-adm/gaia-fleet/master/update_service.sh && chmod +x update_service.sh
   override:
     - cp Dockerfile Dockerfile.run
     - cp Dockerfile.build Dockerfile
@@ -34,11 +38,12 @@ test:
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
     - ./SystemTestCurl.sh
 deployment:
-  hub:
-    branch: master
+  continuous:
+    branch: [master, develop, /feature_.*/]
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push gaiaadm/sts
+      - ./update_service.sh -t $CIRCLE_BRANCH -b $CIRCLE_BUILD_NUM -f security-token-service.service -n sts
 general:
   artifacts:
     - target/sts.war
