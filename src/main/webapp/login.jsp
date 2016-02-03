@@ -1,0 +1,53 @@
+<%--
+  Created by IntelliJ IDEA.
+  User: belozovs
+  Date: 1/20/2016
+  Time: 1:31 PM
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+  <script>
+      window.location = "${pageContext.request.contextPath}/login";
+//    window.location = "http://127.0.0.1:5556/auth?client_id=uJQ2koMAkbboXu455dvUZbuSeuCzkW6JSUl8x39TSBw=@16.54.186.165&redirect_uri=http%3A%2F%2F16.54.186.165%3A9001%2Flos%2Fcallback&response_type=code&scope=openid+email+profile&state=";
+  </script>
+</body>
+</html>
+
+
+<%--
+clientId: uJQ2koMAkbboXu455dvUZbuSeuCzkW6JSUl8x39TSBw=@16.54.186.165
+redirectUrl: http://16.54.186.165:9001/los/callback
+clientSecret: unb_uCS8AZ27LYKKdPfkJ9N30YyeNRE1f26SbBbXF5vbVu411eosPGRAZPvyI0cy4UHtk7WEq4Db2kvpooIbtNABHLx459_x
+
+https://github.com/coreos/dex/blob/2a1d32e6e8e983cebdb50999ddd5c2cc73a945e8/examples/app/main.go
+handleCallbackFunc:tok, err := c.ExchangeAuthCode(code)
+
+
+POST /token HTTP/1.1
+Host: localhost:5556
+Authorization: Basic dUpRMmtvTUFrYmJvWHU0NTVkdlVaYnVTZXVDemtXNkpTVWw4eDM5VFNCdz1AMTYuNTQuMTg2LjE2NTp1bmJfdUNTOEFaMjdMWUtLZFBma0o5TjMwWXllTlJFMWYyNlNiQmJYRjV2YlZ1NDExZW9zUEdSQVpQdnlJMGN5NFVIdGs3V0VxNERiMmt2cG9vSWJ0TkFCSEx4NDU5X3g=
+>>> authorization value is created by base64enc(clientId:clientSecrte)
+Content-Type: application/x-www-form-urlencoded
+
+client_id=uJQ2koMAkbboXu455dvUZbuSeuCzkW6JSUl8x39TSBw%3D%4016.54.186.165&
+client_secret=unb_uCS8AZ27LYKKdPfkJ9N30YyeNRE1f26SbBbXF5vbVu411eosPGRAZPvyI0cy4UHtk7WEq4Db2kvpooIbtNABHLx459_x&
+code=Rzq9fRIfjYI%3D&
+>>> code value is taken from session_key query parameter passed to /callback (when entered to Postman, it shouldn't be URL encoded as Postman encoding it automatically
+grant_type=authorization_code&
+redirect_uri=http%253A%252F%252F16.54.186.165%253A9001%252Flos%252Fcallback&
+scope=openid%2Bemail%2Bprofile
+
+
+RESPONSE of POST to /token looks like this:
+{
+    "access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ii1FNkk3QmdrODZzRU5INnNBc1ppT216aGlzWVBKSU0taDc4UENWVHBIRk5zUURyT2IzRXZjUzhMMHFuVlVDNkNXd1RfbFJhS2xVM00xTm05aWFTckFESDhtdWlkcFppTzczdldvR2JCTk95WEUwemdnUXZUYVh6NkpwVXJlOEk4aVEzd3B6aVR6RmdoWE1VamlzYVdDdVR5SjVNaWRJQ1ljbmZFRHZ6Mk1TTE5XajhvN043bmpxYzc0NThkb1VqZ1B5YmhLOWZJZTlOMDBmRXZTb2d0Z2s2a2Q3M0J3TXVPQ2hPa2NUOThjN1A3SzZwWTlMZ0UzLUJNT1JZS1F2aS1tZGNZRjhRbjNTUWlGR1Z0alNTN05saTc3N1kwT3ZpNFNGd1lhbGlUSXdodW5GamdyMjBrQUdzWFBTU1FPUnFnakJvbU9tU25FSGhXSFFIYTZkNlJndz09IiwidHlwIjoiSldUIn0.eyJhdWQiOiJ1SlEya29NQWtiYm9YdTQ1NWR2VVpidVNldUN6a1c2SlNVbDh4MzlUU0J3PUAxNi41NC4xODYuMTY1IiwiZW1haWwiOiJmb29AaHAuY29tIiwiZXhwIjoxLjQ1MzM0NDEwM2UrMDksImlhdCI6MS40NTMzMDA5MDNlKzA5LCJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjU1NTYiLCJuYW1lIjoiIiwic3ViIjoiNmM0NDdhZDAtYjg1Yy00YTRkLWE0MGQtNTJhNmY3OTI4NDU4In0.3ted_iWVKbpbi5DAsNR_9AdHDmGpFXTY9ZsmWLhKxjJfrLK04KGM5yWnw6hRCvMQ73_Q0ewyrLHQpbCKCT6LEGMsl0n6tRr6mZzJZXeRBiJtUVMy2IR8p5ryW3L0IFAy1XOQy9dXtwXASJQDIN2zwGc1BkwEiFVr38tVYo81l1K7kPbaU1N2KYfMrwzKzdl3u6ec_02R0SPVtz3Sw7y_iIKGu3W0chniYZG7GL-ZM3kTztb0i30XjMiDPN1npbJJAW-VAfempgLhNLQI39rK0NLWK2AuRksFg0ysEdZDNpVIP3EF3pgqWFLarIOkSdV7K9HCXnJlXqAWWiwvk2u7ww",
+    "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ii1FNkk3QmdrODZzRU5INnNBc1ppT216aGlzWVBKSU0taDc4UENWVHBIRk5zUURyT2IzRXZjUzhMMHFuVlVDNkNXd1RfbFJhS2xVM00xTm05aWFTckFESDhtdWlkcFppTzczdldvR2JCTk95WEUwemdnUXZUYVh6NkpwVXJlOEk4aVEzd3B6aVR6RmdoWE1VamlzYVdDdVR5SjVNaWRJQ1ljbmZFRHZ6Mk1TTE5XajhvN043bmpxYzc0NThkb1VqZ1B5YmhLOWZJZTlOMDBmRXZTb2d0Z2s2a2Q3M0J3TXVPQ2hPa2NUOThjN1A3SzZwWTlMZ0UzLUJNT1JZS1F2aS1tZGNZRjhRbjNTUWlGR1Z0alNTN05saTc3N1kwT3ZpNFNGd1lhbGlUSXdodW5GamdyMjBrQUdzWFBTU1FPUnFnakJvbU9tU25FSGhXSFFIYTZkNlJndz09IiwidHlwIjoiSldUIn0.eyJhdWQiOiJ1SlEya29NQWtiYm9YdTQ1NWR2VVpidVNldUN6a1c2SlNVbDh4MzlUU0J3PUAxNi41NC4xODYuMTY1IiwiZW1haWwiOiJmb29AaHAuY29tIiwiZXhwIjoxLjQ1MzM0NDEwM2UrMDksImlhdCI6MS40NTMzMDA5MDNlKzA5LCJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjU1NTYiLCJuYW1lIjoiIiwic3ViIjoiNmM0NDdhZDAtYjg1Yy00YTRkLWE0MGQtNTJhNmY3OTI4NDU4In0.3ted_iWVKbpbi5DAsNR_9AdHDmGpFXTY9ZsmWLhKxjJfrLK04KGM5yWnw6hRCvMQ73_Q0ewyrLHQpbCKCT6LEGMsl0n6tRr6mZzJZXeRBiJtUVMy2IR8p5ryW3L0IFAy1XOQy9dXtwXASJQDIN2zwGc1BkwEiFVr38tVYo81l1K7kPbaU1N2KYfMrwzKzdl3u6ec_02R0SPVtz3Sw7y_iIKGu3W0chniYZG7GL-ZM3kTztb0i30XjMiDPN1npbJJAW-VAfempgLhNLQI39rK0NLWK2AuRksFg0ysEdZDNpVIP3EF3pgqWFLarIOkSdV7K9HCXnJlXqAWWiwvk2u7ww",
+    "token_type": "bearer"
+}
+
+--%>
