@@ -48,21 +48,17 @@ public class UserLoginController {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    private final static String dexUrl = "http://127.0.0.1:5556";
+    private final static String dexUrl = "http://dexworker.skydns.local:5556";
+    private final static String externalDexUrl = "http://gaia.skydns.local:88";
     private final static String discoveryUrl = dexUrl + "/.well-known/openid-configuration";
-    private static String tokenEndpointUrl;// = "http://127.0.0.1:5556/token";
-    private static String authEndpointUrl;// = "http://127.0.0.1:5556/auth";
+    private static String tokenEndpointUrl;
+    private static String authEndpointUrl;
     private static String jwksUrl;
     private static List<String> algorithms = new ArrayList<>();
 
-/*UBUNTU
-    private final static String clientId = "uJQ2koMAkbboXu455dvUZbuSeuCzkW6JSUl8x39TSBw=@16.54.186.165";
-    private final static String clientSecret = "unb_uCS8AZ27LYKKdPfkJ9N30YyeNRE1f26SbBbXF5vbVu411eosPGRAZPvyI0cy4UHtk7WEq4Db2kvpooIbtNABHLx459_x";
-    private final static String callbackUrl = "http%3A%2F%2F16.54.186.165%3A9001%2Flos%2Fcallback";*/
-
-    private final static String clientId = "Hx3O3Y6kvsHAo86GasqZQZeW3uP-XoQB0oErwP6pe9k=@16.54.186.165";
-    private final static String clientSecret = "GWd6ZKqzjhYQAgdEeAMlaO-C9SxN-b8ClMG07sn7kk8bHfPs7kbDpztvkf5yrhAkkv8XG0ndWyt5kulx4lHVj95qIpMAHLq1";
-    private final static String callbackUrl = "http://16.54.186.165:9999/sts/callback";
+    private final static String clientId = "gMJE1WgA1cK2zMCcD7WraL6tDbamP7THRwCTQg-Xn8w=@sts.skydns.local";
+    private final static String clientSecret = "Q6KRttECpBvf1bZRbzHHYpjia74udqhUAa4XISnkTPukMsJ7D_MQnF58krMJZv6t8-eQta9U5kZtHWwAzaEs_zCaE_r4pv_h";
+    private final static String callbackUrl = "http://gaia.skydns.local:88/sts/callback";
 
     @PostConstruct
     void init() {
@@ -75,8 +71,10 @@ public class UserLoginController {
         }
 
         jwksUrl = jsonOpenIdConfig.get("jwks_uri").asText();
-        tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint").asText();
-        authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint").asText();
+//        tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint").asText();
+        tokenEndpointUrl = dexUrl+"/token";
+//        authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint").asText();
+        authEndpointUrl = externalDexUrl+"/auth";
         log.debug("authEndpointUrl: " + authEndpointUrl);
         log.debug("tokenEndpointUrl: " + tokenEndpointUrl);
         log.debug("jwksUrl: " + jwksUrl);
@@ -138,6 +136,8 @@ public class UserLoginController {
         httpServletResponse.setHeader("Location", httpServletRequest.getContextPath()+"/welcome.jsp");
         Cookie cookie = new Cookie("it", jsonDexResponse.get("id_token").asText());
         cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setDomain("skydns.local");
         cookie.setSecure(false);
         httpServletResponse.addCookie(cookie);
         httpServletResponse.setStatus(302);

@@ -9,14 +9,6 @@
 <html>
 <head>
     <title>Welcome to Gaia</title>
-<%--  <%
-    Cookie[] cookies = request.getCookies();
-    for (Cookie cookie : cookies){
-      response.addCookie(cookie);
-    }
-  %>--%>
-
-
 </head>
 <body>
 You are in!
@@ -26,7 +18,7 @@ You are in!
 <ul>
     <li><a href="http://google.com">google.com</a></li>
     <li><a href="http://hpe.com">hpe.com</a></li>
-    <li><a href="http://kibana.skydns.local:5601">See your data in Kibana</a></li>
+    <li><a href="http://gaia.skydns.local">See your data in Kibana</a></li>
     <li>Do something administrative - not implemented yet</li>
 </ul>
 

@@ -1,6 +1,6 @@
 <html>
 <body>
-<h2>Hello World!</h2>
-<a href="${pageContext.request.contextPath}/login.jsp">Login</a>
+<h2>Gaia is so close!</h2>
+<a href="${pageContext.request.contextPath}/login.jsp">Click to login</a>
 </body>
 </html>
