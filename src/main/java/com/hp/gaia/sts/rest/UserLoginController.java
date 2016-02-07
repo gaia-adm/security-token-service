@@ -48,9 +48,9 @@ public class UserLoginController {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    private final static String dexUrl = "http://dexworker.skydns.local:5556";
+    private final static String internalDexUrl = "http://dexworker.skydns.local:5556";
     private final static String externalDexUrl = "http://gaia.skydns.local:88";
-    private final static String discoveryUrl = dexUrl + "/.well-known/openid-configuration";
+    private final static String discoveryUrl = internalDexUrl + "/.well-known/openid-configuration";
     private static String tokenEndpointUrl;
     private static String authEndpointUrl;
     private static String jwksUrl;
@@ -72,7 +72,7 @@ public class UserLoginController {
 
         jwksUrl = jsonOpenIdConfig.get("jwks_uri").asText();
 //        tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint").asText();
-        tokenEndpointUrl = dexUrl+"/token";
+        tokenEndpointUrl = internalDexUrl +"/token";
 //        authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint").asText();
         authEndpointUrl = externalDexUrl+"/auth";
         log.debug("authEndpointUrl: " + authEndpointUrl);
@@ -245,7 +245,7 @@ public class UserLoginController {
                 throw new RuntimeException("bad token type");
             }
             jsonClaims.put("typ", token.getHeader().getType().getType());
-            if (!claims.get("iss").toString().equals(dexUrl)) {
+            if (!claims.get("iss").toString().equals(externalDexUrl)) {
                 throw new RuntimeException("bad issue: " + claims.get("iss").toString());
             }
             jsonClaims.put("iss", claims.get("iss").toString());
