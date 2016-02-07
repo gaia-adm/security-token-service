@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.hp.gaia.sts.util.DexConnectionManager;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
@@ -48,9 +49,11 @@ public class UserLoginController {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    private final static String internalDexUrl = "http://dexworker.skydns.local:5556";
-    private final static String externalDexUrl = "http://gaia.skydns.local:88";
-    private final static String discoveryUrl = internalDexUrl + "/.well-known/openid-configuration";
+    private final static Map<String, String> dexConnectionDetails = DexConnectionManager.getInstance().getConnectionDetails();
+
+    private final static String internalDexUrl = dexConnectionDetails.get("internalDexUrl"); //"http://dexworker.skydns.local:5556";
+    private final static String externalDexUrl = dexConnectionDetails.get("externalDexUrl"); //"http://gaia.skydns.local:88";
+    private final static String discoveryUrl = dexConnectionDetails.get("discoveryUrl"); //internalDexUrl + "/.well-known/openid-configuration";
     private static String tokenEndpointUrl;
     private static String authEndpointUrl;
     private static String jwksUrl;
@@ -70,11 +73,11 @@ public class UserLoginController {
             e.printStackTrace();
         }
 
-        jwksUrl = jsonOpenIdConfig.get("jwks_uri").asText();
-//        tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint").asText();
-        tokenEndpointUrl = internalDexUrl +"/token";
-//        authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint").asText();
-        authEndpointUrl = externalDexUrl+"/auth";
+        jwksUrl = jsonOpenIdConfig.get("jwks_uri").asText().replace(externalDexUrl, internalDexUrl);
+        tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint").asText().replaceAll(externalDexUrl, internalDexUrl);
+//        tokenEndpointUrl = internalDexUrl +"/token";
+        authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint").asText();
+//        authEndpointUrl = externalDexUrl+"/auth";
         log.debug("authEndpointUrl: " + authEndpointUrl);
         log.debug("tokenEndpointUrl: " + tokenEndpointUrl);
         log.debug("jwksUrl: " + jwksUrl);
@@ -133,12 +136,15 @@ public class UserLoginController {
             e.printStackTrace();
         }
 
-        httpServletResponse.setHeader("Location", httpServletRequest.getContextPath()+"/welcome.jsp");
+        httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
+        Cookie cookie = createIdentityTokenCookie(jsonDexResponse.get("id_token").asText(), null);
+/*
         Cookie cookie = new Cookie("it", jsonDexResponse.get("id_token").asText());
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setDomain("skydns.local");
         cookie.setSecure(false);
+*/
         httpServletResponse.addCookie(cookie);
         httpServletResponse.setStatus(302);
 
@@ -187,13 +193,24 @@ public class UserLoginController {
         }
     }
 
+    @RequestMapping(value = "/logout")
+    @ResponseBody
+    void logout(HttpServletRequest request, HttpServletResponse response){
+
+        response.setHeader("Location", request.getContextPath() + "/landing.jsp");
+        Cookie cookie = createIdentityTokenCookie("expired", null);
+        response.addCookie(cookie);
+        response.setStatus(302);
+    }
+
+
     private boolean verifyIdToken(Cookie cookie) {
 
         String stringIdToken = cookie.getValue();
         try {
             SignedJWT token = SignedJWT.parse(stringIdToken);
 
-            JWKSet publicKeys = JWKSet.load(new URL(internalDexUrl+"/keys"));
+            JWKSet publicKeys = JWKSet.load(new URL(jwksUrl));
             JWSVerifier[] verifiers = new JWSVerifier[publicKeys.getKeys().size()];
             for (int i = 0; i < publicKeys.getKeys().size(); i++) {
                 verifiers[i] = new RSASSAVerifier(((RSAKey) publicKeys.getKeys().get(i)).toRSAPublicKey());
@@ -288,5 +305,16 @@ public class UserLoginController {
         return true;
     }
 
+    private Cookie createIdentityTokenCookie(String value, Integer expiration){
+        Cookie cookie = new Cookie("it", value);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setDomain("skydns.local");
+        cookie.setSecure(false);
+        if(expiration!=null){
+            cookie.setMaxAge(expiration);
+        }
+        return cookie;
+    }
 
 }
