@@ -193,7 +193,7 @@ public class UserLoginController {
         try {
             SignedJWT token = SignedJWT.parse(stringIdToken);
 
-            JWKSet publicKeys = JWKSet.load(new URL("http://localhost:5556/keys"));
+            JWKSet publicKeys = JWKSet.load(new URL(internalDexUrl+"/keys"));
             JWSVerifier[] verifiers = new JWSVerifier[publicKeys.getKeys().size()];
             for (int i = 0; i < publicKeys.getKeys().size(); i++) {
                 verifiers[i] = new RSASSAVerifier(((RSAKey) publicKeys.getKeys().get(i)).toRSAPublicKey());
