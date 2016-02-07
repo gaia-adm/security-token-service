@@ -197,11 +197,10 @@ public class UserLoginController {
     @ResponseBody
     void logout(HttpServletRequest request, HttpServletResponse response){
 
-        Cookie[] cookies = request.getCookies();
-        if(cookies != null && cookies.length>0){
-            for(Cookie cookie : cookies){
+        if(request.getCookies() != null){
+            for(Cookie cookie : request.getCookies()){
                 if(cookie.getName().equals("it")){
-                    cookie.setMaxAge(0);
+                    response.addCookie(createIdentityTokenCookie(null, 0));
                 }
             }
         }
@@ -318,7 +317,7 @@ public class UserLoginController {
         cookie.setPath("/");
         cookie.setDomain("skydns.local");
         cookie.setSecure(false);
-        if(expiration!=null){
+        if(expiration!=null) {
             cookie.setMaxAge(expiration);
         }
         return cookie;
