@@ -197,9 +197,16 @@ public class UserLoginController {
     @ResponseBody
     void logout(HttpServletRequest request, HttpServletResponse response){
 
+        Cookie[] cookies = request.getCookies();
+        if(cookies != null && cookies.length>0){
+            for(Cookie cookie : cookies){
+                if(cookie.getName().equals("it")){
+                    cookie.setMaxAge(0);
+                }
+            }
+        }
+
         response.setHeader("Location", request.getContextPath() + "/landing.jsp");
-        Cookie cookie = createIdentityTokenCookie("expired", null);
-        response.addCookie(cookie);
         response.setStatus(302);
     }
 

@@ -27,8 +27,14 @@ public class DexConnectionManager {
             if (StringUtils.isEmpty(externalDexUrl)) {
                 throw new RuntimeException("externalDexUrl environment variable is not set");
             }
+
+            String internalDexUrl = System.getenv("internalDexUrl");
+            if(StringUtils.isEmpty(internalDexUrl)){
+                internalDexUrl =  "http://dexworker.skydns.local:5556";
+            }
+
             dexConnectionDetails.put("externalDexUrl", externalDexUrl);
-            dexConnectionDetails.put("internalDexUrl", "http://dexworker.skydns.local:5556");
+            dexConnectionDetails.put("internalDexUrl", internalDexUrl);
             dexConnectionDetails.put("discoveryUrl", dexConnectionDetails.get("internalDexUrl") + "/.well-known/openid-configuration");
         }
 
