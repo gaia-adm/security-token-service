@@ -184,7 +184,6 @@ public class UserLoginController {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.add("Set-Cookie", "it=" + cookieToDecode.getValue() + ";HttpOnly"); //add secureOnly
 
             return new ResponseEntity<>(body.toString(), headers, HttpStatus.OK);
         } else {

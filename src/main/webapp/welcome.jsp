@@ -19,7 +19,7 @@ You are in!
     <li><a href="http://google.com">google.com</a></li>
     <li><a href="http://gaia.skydns.local">See your data in Kibana</a></li>
     <li>Do something administrative - not implemented yet</li>
-    <li><a href="${pageContext.request.contextPath}/landing.jsp">Logout</a></li>
+    <li><a href="${pageContext.request.contextPath}/logout">Logout</a></li>
 </ul>
 
 </body>
