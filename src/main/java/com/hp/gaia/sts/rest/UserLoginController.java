@@ -116,6 +116,10 @@ public class UserLoginController {
 
     private boolean validateConfiguration() {
 
+        if(Boolean.valueOf(System.getenv("noDex"))){
+            return true;
+        }
+
         boolean result = true;
 
         Set<String> connectionBadDetails = dexConnectionDetails.entrySet().stream().filter( e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
