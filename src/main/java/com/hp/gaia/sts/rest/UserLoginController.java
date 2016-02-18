@@ -31,18 +31,19 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by belozovs on 1/20/2016.
+ * Supports Oauth2 authorization code flow against Dex
  */
 @RestController
 public class UserLoginController {
 
-    private final static Logger log = LoggerFactory.getLogger(UserLoginController.class);
+    private final static Logger logger = LoggerFactory.getLogger(UserLoginController.class);
 
     @Autowired
     RestTemplate restTemplate;
@@ -50,47 +51,87 @@ public class UserLoginController {
     ObjectMapper mapper = new ObjectMapper();
 
     private final static Map<String, String> dexConnectionDetails = DexConnectionManager.getInstance().getConnectionDetails();
+    private final static Map<String, String> dexClientDetails = DexConnectionManager.getInstance().getClientDetails();
 
     private final static String internalDexUrl = dexConnectionDetails.get("internalDexUrl"); //"http://dexworker.skydns.local:5556";
     private final static String externalDexUrl = dexConnectionDetails.get("externalDexUrl"); //"http://gaia.skydns.local:88";
     private final static String discoveryUrl = dexConnectionDetails.get("discoveryUrl"); //internalDexUrl + "/.well-known/openid-configuration";
+
+    private final static String clientId = dexClientDetails.get("dexClientId");
+    private final static String clientSecret = dexClientDetails.get("dexClientSecret");
+    private final static String callbackUrl = dexClientDetails.get("dexAppRedirectUrl");
+
     private static String tokenEndpointUrl;
     private static String authEndpointUrl;
     private static String jwksUrl;
     private static List<String> algorithms = new ArrayList<>();
 
-    private final static String clientId = "gMJE1WgA1cK2zMCcD7WraL6tDbamP7THRwCTQg-Xn8w=@sts.skydns.local";
-    private final static String clientSecret = "Q6KRttECpBvf1bZRbzHHYpjia74udqhUAa4XISnkTPukMsJ7D_MQnF58krMJZv6t8-eQta9U5kZtHWwAzaEs_zCaE_r4pv_h";
-    private final static String callbackUrl = "http://gaia.skydns.local:88/sts/callback";
-
     @PostConstruct
     void init() {
+
+        if(!validateConfiguration()){
+            //hope that fleet will restart it and meanwhile the configuration becomes OK
+            logger.error("Insufficient configuration provided, exiting ....");
+            System.exit(-1);
+        }
+
         ResponseEntity<String> openIdConfig = restTemplate.getForEntity(discoveryUrl, String.class);
         JsonNode jsonOpenIdConfig = null;
         try {
             jsonOpenIdConfig = mapper.readTree(openIdConfig.getBody());
         } catch (IOException e) {
-            e.printStackTrace();
+            //Todo - boris: should be moved to special handler to retry 3-4 times, in case of failure
+            logger.error("Failed to get OIDC well-known configuration, cannot continue", e);
         }
 
-        jwksUrl = jsonOpenIdConfig.get("jwks_uri").asText().replace(externalDexUrl, internalDexUrl);
-        tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint").asText().replaceAll(externalDexUrl, internalDexUrl);
-//        tokenEndpointUrl = internalDexUrl +"/token";
-        authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint").asText();
-//        authEndpointUrl = externalDexUrl+"/auth";
-        log.debug("authEndpointUrl: " + authEndpointUrl);
-        log.debug("tokenEndpointUrl: " + tokenEndpointUrl);
-        log.debug("jwksUrl: " + jwksUrl);
+        if(jsonOpenIdConfig != null) {
 
-        if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported").isArray()) {
-            for (int i = 0; i < jsonOpenIdConfig.get("id_token_signing_alg_values_supported").size(); i++) {
-                algorithms.add(jsonOpenIdConfig.get("id_token_signing_alg_values_supported").get(i).asText());
+            jwksUrl = jsonOpenIdConfig.get("jwks_uri") != null ? jsonOpenIdConfig.get("jwks_uri").asText().replace(externalDexUrl, internalDexUrl) : null;
+            tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint") != null ? jsonOpenIdConfig.get("token_endpoint").asText().replaceAll(externalDexUrl, internalDexUrl) : null;
+            authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint") != null ? jsonOpenIdConfig.get("authorization_endpoint").asText() : null;
+            logger.debug("authEndpointUrl: " + authEndpointUrl);
+            logger.debug("tokenEndpointUrl: " + tokenEndpointUrl);
+            logger.debug("jwksUrl: " + jwksUrl);
+
+            if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported") != null) {
+                if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported").isArray()) {
+                    for (int i = 0; i < jsonOpenIdConfig.get("id_token_signing_alg_values_supported").size(); i++) {
+                        algorithms.add(jsonOpenIdConfig.get("id_token_signing_alg_values_supported").get(i).asText());
+                    }
+                    logger.debug("token_endpoint_auth_methods_supported (algorithms) found: " + algorithms.size());
+                } else {
+                    algorithms.add(jsonOpenIdConfig.get("id_token_signing_alg_values_supported").asText());
+                    logger.debug("Single token_endpoint_auth_methods_supported (algorithms) found and it is a String - suspicious, expected to be Array");
+                }
             }
-            log.debug("token_endpoint_auth_methods_supported (algorithms) found: " + algorithms.size());
-        } else {
-            algorithms.add(jsonOpenIdConfig.get("id_token_signing_alg_values_supported").asText());
-            log.debug("Single token_endpoint_auth_methods_supported (algorithms) found and it is a String - suspicious, expected to be Array");
+
+            if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported") == null || StringUtils.isEmpty(jwksUrl) || StringUtils.isEmpty(tokenEndpointUrl) || StringUtils.isEmpty(authEndpointUrl)) {
+                //Todo - boris: should be moved to special handler to retry 3-4 times, in case of failure
+                logger.error("One of well-known oidc-configuration parameter is null or empty (see preceding messages for more details)");
+            }
         }
+        logger.info("Configured to work with Dex as " + clientId);
+
+    }
+
+    private boolean validateConfiguration() {
+
+        boolean result = true;
+
+        Set<String> connectionBadDetails = dexConnectionDetails.entrySet().stream().filter( e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
+        Set<String> clientBadDetails = dexClientDetails.entrySet().stream().filter( e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
+
+        if(!connectionBadDetails.isEmpty()){
+            result = false;
+            connectionBadDetails.stream().forEach( e -> logger.error("Empty or null value provided for " + e));
+        }
+
+        if(!clientBadDetails.isEmpty()){
+            result = false;
+            clientBadDetails.stream().forEach( e -> logger.error("Empty or null value provided for " + e));
+        }
+
+        return result;
 
     }
 
@@ -126,7 +167,6 @@ public class UserLoginController {
         map.add("redirect_uri", callbackUrl);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-        //RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> dexResponse = restTemplate.postForEntity(tokenEndpointUrl, request, String.class);
 
         JsonNode jsonDexResponse = null;
@@ -134,28 +174,14 @@ public class UserLoginController {
             jsonDexResponse = mapper.readTree(dexResponse.getBody());
         } catch (IOException e) {
             e.printStackTrace();
+            httpServletResponse.setStatus(401);
         }
 
         httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
         Cookie cookie = createIdentityTokenCookie(jsonDexResponse.get("id_token").asText(), null);
-/*
-        Cookie cookie = new Cookie("it", jsonDexResponse.get("id_token").asText());
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setDomain("skydns.local");
-        cookie.setSecure(false);
-*/
+
         httpServletResponse.addCookie(cookie);
         httpServletResponse.setStatus(302);
-
-
-/**
- *      POST /token HTTP/1.1
- *      Authorization: Basic aW5aWF9sdlR6X0taaTI5d0JnOS1fY09wa09MbUVvZFUyT2J3MjNNSjdlND1AMTI3LjAuMC4xOjFvT0RMTUdsN1pGNW1TdmdFWFhUdDVhTlZLazY3VExQNTBoakFtSEtyN1RJckJVTkl6eTRkZUcwV1VPTkJCMFVVVUhlMXZZcUp0ZzZXS3N3bkNGZFlkc1M3UlRFc09FYQ==
- *      Content-Type: application/x-www-form-urlencoded
- *      client_id=inZX_lvTz_KZi29wBg9-_cOpkOLmEodU2Obw23MJ7e4%3D%40127.0.0.1&client_secret=1oODLMGl7ZF5mSvgEXXTt5aNVKk67TLP50hjAmHKr7TIrBUNIzy4deG0WUONBB0UUUHe1vYqJtg6WKswnCFdYdsS7RTEsOEa&code=7HBah9lMe3I%3D&grant_type=authorization_code&redirect_uri=http%3A%2F%2F127.0.0.1%3A5555%2Fcallback&scope=openid+email+profile
- */
-
 
     }
 
@@ -214,7 +240,9 @@ public class UserLoginController {
         String stringIdToken = cookie.getValue();
         try {
             SignedJWT token = SignedJWT.parse(stringIdToken);
-
+            //TODO - boris: brings the new keys every time. What happens if dex is not available for a moment?
+            // Should previous set be cached and used until no keys fit to decode
+            // and so the cache should be invalidate and rebuilt from scratch
             JWKSet publicKeys = JWKSet.load(new URL(jwksUrl));
             JWSVerifier[] verifiers = new JWSVerifier[publicKeys.getKeys().size()];
             for (int i = 0; i < publicKeys.getKeys().size(); i++) {
@@ -233,13 +261,7 @@ public class UserLoginController {
 
             return false;
 
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JOSEException e) {
+        } catch (ParseException | IOException | JOSEException e) {
             e.printStackTrace();
         }
 
@@ -301,13 +323,7 @@ public class UserLoginController {
     }
 
     private boolean isValidEmail(String emailAddress) {
-        if (StringUtils.isEmpty(emailAddress)) {
-            return false;
-        }
-        if (!emailAddress.contains("@")) {
-            return false;
-        }
-        return true;
+        return !StringUtils.isEmpty(emailAddress) && emailAddress.contains("@");
     }
 
     private Cookie createIdentityTokenCookie(String value, Integer expiration){
