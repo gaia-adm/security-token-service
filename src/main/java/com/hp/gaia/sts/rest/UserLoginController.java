@@ -69,56 +69,55 @@ public class UserLoginController {
     @PostConstruct
     void init() {
 
-        if(!validateConfiguration()){
-            //hope that fleet will restart it and meanwhile the configuration becomes OK
-            logger.error("Insufficient configuration provided, exiting ....");
-            System.exit(-1);
-        }
+        if(! Boolean.valueOf(System.getenv("noDex"))) {
 
-        ResponseEntity<String> openIdConfig = restTemplate.getForEntity(discoveryUrl, String.class);
-        JsonNode jsonOpenIdConfig = null;
-        try {
-            jsonOpenIdConfig = mapper.readTree(openIdConfig.getBody());
-        } catch (IOException e) {
-            //Todo - boris: should be moved to special handler to retry 3-4 times, in case of failure
-            logger.error("Failed to get OIDC well-known configuration, cannot continue", e);
-        }
 
-        if(jsonOpenIdConfig != null) {
+            if (!validateConfiguration()) {
+                //hope that fleet will restart it and meanwhile the configuration becomes OK
+                logger.error("Insufficient configuration provided, exiting ....");
+                System.exit(-1);
+            }
 
-            jwksUrl = jsonOpenIdConfig.get("jwks_uri") != null ? jsonOpenIdConfig.get("jwks_uri").asText().replace(externalDexUrl, internalDexUrl) : null;
-            tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint") != null ? jsonOpenIdConfig.get("token_endpoint").asText().replaceAll(externalDexUrl, internalDexUrl) : null;
-            authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint") != null ? jsonOpenIdConfig.get("authorization_endpoint").asText() : null;
-            logger.debug("authEndpointUrl: " + authEndpointUrl);
-            logger.debug("tokenEndpointUrl: " + tokenEndpointUrl);
-            logger.debug("jwksUrl: " + jwksUrl);
+            ResponseEntity<String> openIdConfig = restTemplate.getForEntity(discoveryUrl, String.class);
+            JsonNode jsonOpenIdConfig = null;
+            try {
+                jsonOpenIdConfig = mapper.readTree(openIdConfig.getBody());
+            } catch (IOException e) {
+                //Todo - boris: should be moved to special handler to retry 3-4 times, in case of failure
+                logger.error("Failed to get OIDC well-known configuration, cannot continue", e);
+            }
 
-            if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported") != null) {
-                if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported").isArray()) {
-                    for (int i = 0; i < jsonOpenIdConfig.get("id_token_signing_alg_values_supported").size(); i++) {
-                        algorithms.add(jsonOpenIdConfig.get("id_token_signing_alg_values_supported").get(i).asText());
+            if (jsonOpenIdConfig != null) {
+
+                jwksUrl = jsonOpenIdConfig.get("jwks_uri") != null ? jsonOpenIdConfig.get("jwks_uri").asText().replace(externalDexUrl, internalDexUrl) : null;
+                tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint") != null ? jsonOpenIdConfig.get("token_endpoint").asText().replaceAll(externalDexUrl, internalDexUrl) : null;
+                authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint") != null ? jsonOpenIdConfig.get("authorization_endpoint").asText() : null;
+                logger.debug("authEndpointUrl: " + authEndpointUrl);
+                logger.debug("tokenEndpointUrl: " + tokenEndpointUrl);
+                logger.debug("jwksUrl: " + jwksUrl);
+
+                if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported") != null) {
+                    if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported").isArray()) {
+                        for (int i = 0; i < jsonOpenIdConfig.get("id_token_signing_alg_values_supported").size(); i++) {
+                            algorithms.add(jsonOpenIdConfig.get("id_token_signing_alg_values_supported").get(i).asText());
+                        }
+                        logger.debug("token_endpoint_auth_methods_supported (algorithms) found: " + algorithms.size());
+                    } else {
+                        algorithms.add(jsonOpenIdConfig.get("id_token_signing_alg_values_supported").asText());
+                        logger.debug("Single token_endpoint_auth_methods_supported (algorithms) found and it is a String - suspicious, expected to be Array");
                     }
-                    logger.debug("token_endpoint_auth_methods_supported (algorithms) found: " + algorithms.size());
-                } else {
-                    algorithms.add(jsonOpenIdConfig.get("id_token_signing_alg_values_supported").asText());
-                    logger.debug("Single token_endpoint_auth_methods_supported (algorithms) found and it is a String - suspicious, expected to be Array");
+                }
+
+                if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported") == null || StringUtils.isEmpty(jwksUrl) || StringUtils.isEmpty(tokenEndpointUrl) || StringUtils.isEmpty(authEndpointUrl)) {
+                    //Todo - boris: should be moved to special handler to retry 3-4 times, in case of failure
+                    logger.error("One of well-known oidc-configuration parameter is null or empty (see preceding messages for more details)");
                 }
             }
-
-            if (jsonOpenIdConfig.get("id_token_signing_alg_values_supported") == null || StringUtils.isEmpty(jwksUrl) || StringUtils.isEmpty(tokenEndpointUrl) || StringUtils.isEmpty(authEndpointUrl)) {
-                //Todo - boris: should be moved to special handler to retry 3-4 times, in case of failure
-                logger.error("One of well-known oidc-configuration parameter is null or empty (see preceding messages for more details)");
-            }
+            logger.info("Configured to work with Dex as " + clientId);
         }
-        logger.info("Configured to work with Dex as " + clientId);
-
     }
 
     private boolean validateConfiguration() {
-
-        if(Boolean.valueOf(System.getenv("noDex"))){
-            return true;
-        }
 
         boolean result = true;
 
