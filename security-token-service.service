@@ -40,11 +40,17 @@ RestartSec=20s
 ExecStartPre=-/usr/bin/docker stop sts
 ExecStartPre=-/usr/bin/docker rm sts
 
-ExecStart=/usr/bin/docker run \
--u jetty --name sts \
+ExecStart=/usr/bin/docker run  \
+-u jetty \
+--name sts \
 -p 9001:8080 \
 -p 9093:9093 \
+-e DEX_APP_CLIENT_ID=${DEX_APP_CLIENT_ID} \
+-e DEX_APP_CLIENT_SECRET=${DEX_APP_CLIENT_SECRET} \
+-e DEX_APP_REDIRECTURL_0=${DEX_APP_REDIRECTURL_0} \
 -e etcdUrl=http://${COREOS_PRIVATE_IPV4}:4001 \
+ e externalDexUrl=http://gaia.skydns.local:88 \
+-e internalDexUrl=http://dexworker.skydns.local:5556 \
 -e SERVICE_8080_NAME=sts \
 -e SERVICE_8080_TAGS=master \
 -e SERVICE_9093_NAME=stsdb \
