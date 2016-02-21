@@ -1,5 +1,7 @@
 package com.hp.gaia.sts.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
@@ -11,6 +13,8 @@ import java.util.Map;
  * Also collects previously saved dex-client configuration in order to prevent clients multiplying on restart
  */
 public class DexConnectionManager {
+
+    private final static Logger logger = LoggerFactory.getLogger(DexConnectionManager.class);
 
     private static final DexConnectionManager instance = new DexConnectionManager();
     private Map<String, String> dexConnectionDetails = new HashMap<>();
@@ -29,6 +33,10 @@ public class DexConnectionManager {
 
             //TODO - boris: configurable scheme and port
             String domain = System.getenv("DOMAIN");
+            if(StringUtils.isEmpty(domain)){
+                logger.error("DOMAIN environment variable not set; using gaia.skydns.local - bad for all though working for vagrant");
+                domain = "gaia.skydns.local";
+            }
             String internalDexServer = domain.replace(domain.substring(0,domain.indexOf('.')), "dexworker");
             String internalDexUrl = "http://"+internalDexServer+":5556";
             String externalDexUrl = "http://"+domain+":88";
