@@ -56,6 +56,7 @@ public class UserLoginController {
     private final static String internalDexUrl = dexConnectionDetails.get("internalDexUrl"); //"http://dexworker.skydns.local:5556";
     private final static String externalDexUrl = dexConnectionDetails.get("externalDexUrl"); //"http://gaia.skydns.local:88";
     private final static String discoveryUrl = dexConnectionDetails.get("discoveryUrl"); //internalDexUrl + "/.well-known/openid-configuration";
+    private final static String domain = dexConnectionDetails.get("domain");
 
     private final static String clientId = dexClientDetails.get("dexClientId");
     private final static String clientSecret = dexClientDetails.get("dexClientSecret");
@@ -333,7 +334,7 @@ public class UserLoginController {
         Cookie cookie = new Cookie("it", value);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setDomain("skydns.local");
+        cookie.setDomain(domain);
         cookie.setSecure(false);
         if(expiration!=null) {
             cookie.setMaxAge(expiration);

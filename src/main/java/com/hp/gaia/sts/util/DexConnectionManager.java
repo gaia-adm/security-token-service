@@ -27,13 +27,15 @@ public class DexConnectionManager {
 
         if (dexConnectionDetails.isEmpty()) {
 
-            String internalDexUrl = System.getenv("internalDexUrl");
-            if(StringUtils.isEmpty(internalDexUrl)){
-                internalDexUrl =  "http://dexworker.skydns.local:5556";
-            }
+            //TODO - boris: configurable scheme and port
+            String domain = System.getenv("DOMAIN");
+            String internalDexServer = domain.replace(domain.substring(0,domain.indexOf('.')), "dexworker");
+            String internalDexUrl = "http://"+internalDexServer+":5556";
+            String externalDexUrl = "http://"+domain+":88";
             dexConnectionDetails.put("internalDexUrl", internalDexUrl);
-            dexConnectionDetails.put("externalDexUrl", System.getenv("externalDexUrl"));
+            dexConnectionDetails.put("externalDexUrl", externalDexUrl);
             dexConnectionDetails.put("discoveryUrl", dexConnectionDetails.get("internalDexUrl") + "/.well-known/openid-configuration");
+            dexConnectionDetails.put("domain", domain);
         }
 
         return dexConnectionDetails;
