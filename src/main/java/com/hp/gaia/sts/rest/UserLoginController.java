@@ -181,7 +181,12 @@ public class UserLoginController {
             httpServletResponse.setStatus(401);
         }
 
-        httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
+        //httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
+        if(httpServletRequest.isSecure()){
+            httpServletResponse.setHeader("Location", "https://"+domain);
+        } else {
+            httpServletResponse.setHeader("Location", "http://"+domain);
+        }
         Cookie cookie = createIdentityTokenCookie(jsonDexResponse.get("id_token").asText(), null);
 
         httpServletResponse.addCookie(cookie);
@@ -234,7 +239,7 @@ public class UserLoginController {
             }
         }
 
-        response.setHeader("Location", request.getContextPath() + "/landing.jsp");
+        response.setHeader("Location", request.getContextPath() + "/login.jsp");
         response.setStatus(302);
     }
 
