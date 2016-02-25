@@ -12,7 +12,7 @@ import java.util.Map;
  * Collects basic dex configuration from environment
  * Also collects previously saved dex-client configuration in order to prevent clients multiplying on restart
  */
-public class DexConnectionManager {
+public class DexConnectionManager implements IDPConnectManager{
 
     private final static Logger logger = LoggerFactory.getLogger(DexConnectionManager.class);
 
@@ -34,8 +34,8 @@ public class DexConnectionManager {
             //TODO - boris: configurable scheme and port
             String domain = System.getenv("DOMAIN");
             if(StringUtils.isEmpty(domain)){
-                logger.error("DOMAIN environment variable not set; using gaia.skydns.local - bad for all though working for vagrant");
-                domain = "gaia.skydns.local";
+                logger.error("DOMAIN environment variable not set; using gaia-local.skydns.local - bad for all though working for vagrant");
+                domain = "gaia-local.skydns.local";
             }
             String internalDexServer = domain.replace(domain.substring(0,domain.indexOf('.')), "dexworker");
             String internalDexUrl = "http://"+internalDexServer+":5556";

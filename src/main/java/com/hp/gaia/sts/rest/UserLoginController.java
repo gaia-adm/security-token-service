@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hp.gaia.sts.util.DexConnectionManager;
+import com.hp.gaia.sts.util.IDPConnectManager;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
@@ -50,17 +51,18 @@ public class UserLoginController {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    private final static Map<String, String> dexConnectionDetails = DexConnectionManager.getInstance().getConnectionDetails();
-    private final static Map<String, String> dexClientDetails = DexConnectionManager.getInstance().getClientDetails();
+    private final static IDPConnectManager idpcm = DexConnectionManager.getInstance();
+    private final static Map<String, String> idpConnectionDetails = idpcm.getConnectionDetails();
+    private final static Map<String, String> idpClientDetails = idpcm.getClientDetails();
 
-    private final static String internalDexUrl = dexConnectionDetails.get("internalDexUrl"); //"http://dexworker.skydns.local:5556";
-    private final static String externalDexUrl = dexConnectionDetails.get("externalDexUrl"); //"http://gaia.skydns.local:88";
-    private final static String discoveryUrl = dexConnectionDetails.get("discoveryUrl"); //internalDexUrl + "/.well-known/openid-configuration";
-    private final static String domain = dexConnectionDetails.get("domain");
+    private final static String internalDexUrl = idpConnectionDetails.get("internalDexUrl"); //"http://dexworker.skydns.local:5556";
+    private final static String externalDexUrl = idpConnectionDetails.get("externalDexUrl"); //"http://gaia.skydns.local:88";
+    private final static String discoveryUrl = idpConnectionDetails.get("discoveryUrl"); //internalDexUrl + "/.well-known/openid-configuration";
+    private final static String domain = idpConnectionDetails.get("domain");
 
-    private final static String clientId = dexClientDetails.get("dexClientId");
-    private final static String clientSecret = dexClientDetails.get("dexClientSecret");
-    private final static String callbackUrl = dexClientDetails.get("dexAppRedirectUrl");
+    private final static String clientId = idpClientDetails.get("dexClientId");
+    private final static String clientSecret = idpClientDetails.get("dexClientSecret");
+    private final static String callbackUrl = idpClientDetails.get("dexAppRedirectUrl");
 
     private static String tokenEndpointUrl;
     private static String authEndpointUrl;
@@ -118,12 +120,12 @@ public class UserLoginController {
         }
     }
 
-    private boolean validateConfiguration() {
+    boolean validateConfiguration() {
 
         boolean result = true;
 
-        Set<String> connectionBadDetails = dexConnectionDetails.entrySet().stream().filter( e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
-        Set<String> clientBadDetails = dexClientDetails.entrySet().stream().filter( e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
+        Set<String> connectionBadDetails = idpConnectionDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
+        Set<String> clientBadDetails = idpClientDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
 
         if(!connectionBadDetails.isEmpty()){
             result = false;
@@ -199,7 +201,7 @@ public class UserLoginController {
 
         Cookie[] cookies = request.getCookies();
         for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("it")) {
+            if (cookie.getName().equals("gaia.it")) {
                 isVerified = verifyIdToken(cookie);
 
                 cookieToDecode = cookie;
@@ -228,7 +230,7 @@ public class UserLoginController {
 
         if(request.getCookies() != null){
             for(Cookie cookie : request.getCookies()){
-                if(cookie.getName().equals("it")){
+                if(cookie.getName().equals("gaia.it")){
                     response.addCookie(createIdentityTokenCookie(null, 0));
                 }
             }
@@ -331,7 +333,7 @@ public class UserLoginController {
     }
 
     private Cookie createIdentityTokenCookie(String value, Integer expiration){
-        Cookie cookie = new Cookie("it", value);
+        Cookie cookie = new Cookie("gaia.it", value);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setDomain(domain);
