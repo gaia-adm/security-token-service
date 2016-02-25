@@ -65,6 +65,13 @@
             <version>2.0.7.RELEASE</version>
         </dependency>
 
+        <!-- JWT -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>4.11.2</version>
+        </dependency>
+
         <!-- spring -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -147,6 +154,7 @@
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
             <version>3.3.1</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
@@ -167,10 +175,11 @@
             <plugin>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
-                <version>9.3.0.v20150612</version>
+                <version>9.2.11.v20150529</version>
                 <configuration>
                     <httpConnector>
-                        <port>9001</port>
+                        <port>9999</port>
+
                     </httpConnector>
                     <webApp>
                         <contextPath>/${final.name}</contextPath>

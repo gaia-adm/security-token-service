@@ -146,9 +146,9 @@
     </bean>
 
     <!-- H2 DB Web Console -->
-    <bean id="h2WebServer" class="org.h2.tools.Server" factory-method="createWebServer" init-method="start" destroy-method="stop">
+<!--    <bean id="h2WebServer" class="org.h2.tools.Server" factory-method="createWebServer" init-method="start" destroy-method="stop">
         <constructor-arg value="-web,-webAllowOthers,-webPort,9093"/>
-    </bean>
+    </bean>-->
 
     <beans profile="db">
         <bean id="tenantDao" class="com.hp.gaia.sts.dao.TenantDaoImpl">
