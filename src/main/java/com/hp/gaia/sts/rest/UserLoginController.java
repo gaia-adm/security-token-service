@@ -161,8 +161,7 @@ public class UserLoginController {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.add("Authorization", "Basic " + authValue);
 
-        System.out.println("authValue=" + authValue);
-        System.out.println("code=" + code);
+        logger.debug("code=" + code);
 
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add("client_id", clientId);
@@ -218,8 +217,9 @@ public class UserLoginController {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             return new ResponseEntity<>(body.toString(), headers, HttpStatus.OK);
-        } else {
-            System.out.println("Token verification has failed for " + cookieToDecode.getValue());
+        } else {    //bad cookie or not presented at all
+            String message = (cookieToDecode == null ) ? "No token provided" : "Token verification has failed for " + cookieToDecode.getValue();
+            logger.error(message);
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }
