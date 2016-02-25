@@ -151,42 +151,47 @@ public class UserLoginController {
 
     @RequestMapping(value = "/callback")
     @ResponseBody
-    void loginCallback(@RequestParam("code") String code, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    void loginCallback(@RequestParam(value = "code", required = false) String code, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
+        if(code == null){
+            //password reset flow or just a hack - redirecting to logout
+            logout(httpServletRequest, httpServletResponse);
+        } else {
 
-        byte[] clientBytes = (clientId + ":" + clientSecret).getBytes();
-        String authValue = Base64.getEncoder().encodeToString(clientBytes);
+            byte[] clientBytes = (clientId + ":" + clientSecret).getBytes();
+            String authValue = Base64.getEncoder().encodeToString(clientBytes);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.add("Authorization", "Basic " + authValue);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.add("Authorization", "Basic " + authValue);
 
-        logger.debug("code=" + code);
+            logger.debug("code=" + code);
 
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.add("client_id", clientId);
-        map.add("client_secret", clientSecret);
-        map.add("grant_type", "authorization_code");
-        map.add("code", code);
-        map.add("scope", "openid+email+profile");
-        map.add("redirect_uri", callbackUrl);
+            MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+            map.add("client_id", clientId);
+            map.add("client_secret", clientSecret);
+            map.add("grant_type", "authorization_code");
+            map.add("code", code);
+            map.add("scope", "openid+email+profile");
+            map.add("redirect_uri", callbackUrl);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-        ResponseEntity<String> dexResponse = restTemplate.postForEntity(tokenEndpointUrl, request, String.class);
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+            ResponseEntity<String> dexResponse = restTemplate.postForEntity(tokenEndpointUrl, request, String.class);
 
-        JsonNode jsonDexResponse = null;
-        try {
-            jsonDexResponse = mapper.readTree(dexResponse.getBody());
-        } catch (IOException e) {
-            e.printStackTrace();
-            httpServletResponse.setStatus(401);
+            JsonNode jsonDexResponse = null;
+            try {
+                jsonDexResponse = mapper.readTree(dexResponse.getBody());
+            } catch (IOException e) {
+                e.printStackTrace();
+                httpServletResponse.setStatus(401);
+            }
+
+            httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
+            Cookie cookie = createIdentityTokenCookie(jsonDexResponse.get("id_token").asText(), null);
+
+            httpServletResponse.addCookie(cookie);
+            httpServletResponse.setStatus(302);
         }
-
-        httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
-        Cookie cookie = createIdentityTokenCookie(jsonDexResponse.get("id_token").asText(), null);
-
-        httpServletResponse.addCookie(cookie);
-        httpServletResponse.setStatus(302);
 
     }
 
