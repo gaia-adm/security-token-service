@@ -32,14 +32,17 @@ public class DexConnectionManager implements IDPConnectManager{
         if (dexConnectionDetails.isEmpty()) {
 
             //TODO - boris: configurable scheme and port
-            String domain = System.getenv("DOMAIN");
-            if(StringUtils.isEmpty(domain)){
+
+/*            if(StringUtils.isEmpty(domain)){
                 logger.error("DOMAIN environment variable not set; using gaia-local.skydns.local - bad for all though working for vagrant");
                 domain = "gaia-local.skydns.local";
-            }
-            String internalDexServer = domain.replace(domain.substring(0,domain.indexOf('.')), "dexworker");
+            }*/
+//            String internalDexServer = internalDomain.replace(internalDomain.substring(0,internalDomain.indexOf('.')), "dexworker");
+
+            String domain = System.getenv("DOMAIN");
+            String internalDexServer = System.getenv("INTERNAL_DEX_SERVER");    //e.g., dexworker.skydns.local
             String internalDexUrl = "http://"+internalDexServer+":5556";
-            String externalDexUrl = "http://"+domain+":88";
+            String externalDexUrl = "http://"+domain+":88";     //e.g., beta.gaiahub.io
             dexConnectionDetails.put("internalDexUrl", internalDexUrl);
             dexConnectionDetails.put("externalDexUrl", externalDexUrl);
             dexConnectionDetails.put("discoveryUrl", dexConnectionDetails.get("internalDexUrl") + "/.well-known/openid-configuration");
