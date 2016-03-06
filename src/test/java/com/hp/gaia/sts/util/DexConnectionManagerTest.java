@@ -22,10 +22,10 @@ public class DexConnectionManagerTest {
     @Test
     public void testGetConnectionDetails() throws Exception {
         IDPConnectManager idpcm = DexConnectionManager.getInstance();
-        assertEquals(idpcm.getConnectionDetails().get("domain"), "gaia-local.skydns.local");
-        assertEquals(idpcm.getConnectionDetails().get("internalDexUrl"), "http://dexworker.skydns.local:5556");
-        assertEquals(idpcm.getConnectionDetails().get("externalDexUrl"), "http://gaia-local.skydns.local:88");
-        assertEquals(idpcm.getConnectionDetails().get("discoveryUrl"), "http://dexworker.skydns.local:5556/.well-known/openid-configuration");
+        assertEquals("Domain", idpcm.getConnectionDetails().get("domain"), "gaia-local.skydns.local");
+        assertEquals("internalDexUrl", idpcm.getConnectionDetails().get("internalDexUrl"), "http://dexworker.skydns.local:5556");
+        assertEquals("externalDexUrl", idpcm.getConnectionDetails().get("externalDexUrl"), "http://gaia-local.skydns.local:88");
+        assertEquals("discoveryUrl", idpcm.getConnectionDetails().get("discoveryUrl"), "http://dexworker.skydns.local:5556/.well-known/openid-configuration");
     }
 
     @Test
