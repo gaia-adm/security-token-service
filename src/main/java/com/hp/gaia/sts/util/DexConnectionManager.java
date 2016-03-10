@@ -37,7 +37,13 @@ public class DexConnectionManager implements IDPConnectManager{
                 logger.error("DOMAIN environment variable not set; using gaia-local.skydns.local - bad for all though working for vagrant");
                 domain = "gaia-local.skydns.local";
             }
-            String internalDexServer = domain.replace(domain.substring(0,domain.indexOf('.')), "dexworker");
+//            String internalDexServer = internalDomain.replace(internalDomain.substring(0,internalDomain.indexOf('.')), "dexworker");
+            String internalDexServer = System.getenv("INTERNAL_DEX_SERVER");    //e.g., dexworker.skydns.local
+            if(StringUtils.isEmpty(internalDexServer)){
+                logger.error("INTERNAL_DEX_SERVER environment variable not set; using dexworker.skydns.local; it may work but you must verify it is not by mistake");
+                internalDexServer = "dexworker.skydns.local";
+            }
+
             String internalDexUrl = "http://"+internalDexServer+":5556";
             String externalDexUrl = "http://"+domain+":88";
             dexConnectionDetails.put("internalDexUrl", internalDexUrl);
