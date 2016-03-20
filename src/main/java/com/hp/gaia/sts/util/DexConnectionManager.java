@@ -18,6 +18,8 @@ public class DexConnectionManager implements IDPConnectManager {
 
     private final static String internalProtocol = "http";
     private final static String externalProtocol = "https";
+    private final static String internalPort = "5556";
+    private final static String externalPort = "88";
 
     private static final DexConnectionManager instance = new DexConnectionManager();
     private Map<String, String> dexConnectionDetails = new HashMap<>();
@@ -40,19 +42,23 @@ public class DexConnectionManager implements IDPConnectManager {
                 logger.error("DOMAIN environment variable not set; using gaia-local.skydns.local - bad for all though working for vagrant");
                 domain = "gaia-local.skydns.local";
             }
-//            String internalDexServer = internalDomain.replace(internalDomain.substring(0,internalDomain.indexOf('.')), "dexworker");
             String internalDexServer = System.getenv("INTERNAL_DEX_SERVER");    //e.g., dexworker.skydns.local
             if (StringUtils.isEmpty(internalDexServer)) {
                 logger.error("INTERNAL_DEX_SERVER environment variable not set; using dexworker.skydns.local; it may work but you must verify it is not by mistake");
                 internalDexServer = "dexworker.skydns.local";
             }
 
-            String internalDexUrl = internalProtocol + "://" + internalDexServer + ":5556";
-            String externalDexUrl = externalProtocol + "://" + domain + ":88";
-            dexConnectionDetails.put("internalDexUrl", internalDexUrl);
+            String externalDexUrl = externalProtocol + "://" + domain + ":" + externalPort;
             dexConnectionDetails.put("externalDexUrl", externalDexUrl);
-            dexConnectionDetails.put("discoveryUrl", dexConnectionDetails.get("internalDexUrl") + "/.well-known/openid-configuration");
+            dexConnectionDetails.put("discoveryUrl", internalProtocol + "://" + internalDexServer + ":" + internalPort + "/.well-known/openid-configuration");
+
             dexConnectionDetails.put("domain", domain);
+            dexConnectionDetails.put("internalDexServer", internalDexServer);
+            dexConnectionDetails.put("internalPort", internalPort);
+            dexConnectionDetails.put("externalPort", externalPort);
+            dexConnectionDetails.put("internalProtocol", internalProtocol);
+            dexConnectionDetails.put("externalProtocol", externalProtocol);
+
         }
 
         return dexConnectionDetails;
@@ -67,12 +73,4 @@ public class DexConnectionManager implements IDPConnectManager {
 
         return dexClientDetails;
     }
-    public String getInternalProtocol() {
-        return DexConnectionManager.internalProtocol;
-    }
-
-    public String getExternalProtocol() {
-        return DexConnectionManager.externalProtocol;
-    }
-
 }

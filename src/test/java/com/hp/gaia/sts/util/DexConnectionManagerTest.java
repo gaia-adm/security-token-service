@@ -7,6 +7,7 @@ import static org.junit.Assert.*;
 
 /**
  * Created by belozovs on 2/23/2016.
+ *
  */
 public class DexConnectionManagerTest {
 
@@ -16,14 +17,13 @@ public class DexConnectionManagerTest {
         IDPConnectManager idpcm = DexConnectionManager.getInstance();
         assertNotNull(idpcm);
         assertEquals(idpcm.getClass(), DexConnectionManager.class);
-        assertTrue(idpcm instanceof IDPConnectManager);
     }
 
     @Test
     public void testGetConnectionDetails() throws Exception {
         IDPConnectManager idpcm = DexConnectionManager.getInstance();
         assertEquals("Domain", idpcm.getConnectionDetails().get("domain"), "gaia-local.skydns.local");
-        assertEquals("internalDexUrl", idpcm.getConnectionDetails().get("internalDexUrl"), "http://dexworker.skydns.local:5556");
+        assertEquals("internalDexUrl", idpcm.getConnectionDetails().get("internalProtocol")+"://"+idpcm.getConnectionDetails().get("internalDexServer")+":"+idpcm.getConnectionDetails().get("internalPort"), "http://dexworker.skydns.local:5556");
         assertEquals("externalDexUrl", idpcm.getConnectionDetails().get("externalDexUrl"), "https://gaia-local.skydns.local:88");
         assertEquals("discoveryUrl", idpcm.getConnectionDetails().get("discoveryUrl"), "http://dexworker.skydns.local:5556/.well-known/openid-configuration");
     }
