@@ -12,9 +12,12 @@ import java.util.Map;
  * Collects basic dex configuration from environment
  * Also collects previously saved dex-client configuration in order to prevent clients multiplying on restart
  */
-public class DexConnectionManager implements IDPConnectManager{
+public class DexConnectionManager implements IDPConnectManager {
 
     private final static Logger logger = LoggerFactory.getLogger(DexConnectionManager.class);
+
+    private final static String internalProtocol = "http";
+    private final static String externalProtocol = "https";
 
     private static final DexConnectionManager instance = new DexConnectionManager();
     private Map<String, String> dexConnectionDetails = new HashMap<>();
@@ -33,19 +36,19 @@ public class DexConnectionManager implements IDPConnectManager{
 
             //TODO - boris: configurable scheme and port
             String domain = System.getenv("DOMAIN");
-            if(StringUtils.isEmpty(domain)){
+            if (StringUtils.isEmpty(domain)) {
                 logger.error("DOMAIN environment variable not set; using gaia-local.skydns.local - bad for all though working for vagrant");
                 domain = "gaia-local.skydns.local";
             }
 //            String internalDexServer = internalDomain.replace(internalDomain.substring(0,internalDomain.indexOf('.')), "dexworker");
             String internalDexServer = System.getenv("INTERNAL_DEX_SERVER");    //e.g., dexworker.skydns.local
-            if(StringUtils.isEmpty(internalDexServer)){
+            if (StringUtils.isEmpty(internalDexServer)) {
                 logger.error("INTERNAL_DEX_SERVER environment variable not set; using dexworker.skydns.local; it may work but you must verify it is not by mistake");
                 internalDexServer = "dexworker.skydns.local";
             }
 
-            String internalDexUrl = "http://"+internalDexServer+":5556";
-            String externalDexUrl = "http://"+domain+":88";
+            String internalDexUrl = internalProtocol + "://" + internalDexServer + ":5556";
+            String externalDexUrl = externalProtocol + "://" + domain + ":88";
             dexConnectionDetails.put("internalDexUrl", internalDexUrl);
             dexConnectionDetails.put("externalDexUrl", externalDexUrl);
             dexConnectionDetails.put("discoveryUrl", dexConnectionDetails.get("internalDexUrl") + "/.well-known/openid-configuration");
@@ -56,13 +59,20 @@ public class DexConnectionManager implements IDPConnectManager{
     }
 
     public Map<String, String> getClientDetails() {
-        if(dexClientDetails.isEmpty()){
+        if (dexClientDetails.isEmpty()) {
             dexClientDetails.put("dexClientId", System.getenv("DEX_APP_CLIENT_ID"));
             dexClientDetails.put("dexClientSecret", System.getenv("DEX_APP_CLIENT_SECRET"));
             dexClientDetails.put("dexAppRedirectUrl", System.getenv("DEX_APP_REDIRECTURL_0"));
         }
 
         return dexClientDetails;
+    }
+    public String getInternalProtocol() {
+        return DexConnectionManager.internalProtocol;
+    }
+
+    public String getExternalProtocol() {
+        return DexConnectionManager.externalProtocol;
     }
 
 }

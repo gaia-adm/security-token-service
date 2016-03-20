@@ -10,4 +10,7 @@ public interface IDPConnectManager {
     Map<String, String> getConnectionDetails();
     Map<String, String> getClientDetails();
 
+    String getExternalProtocol();
+    String getInternalProtocol();
+
 }

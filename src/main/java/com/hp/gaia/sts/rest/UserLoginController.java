@@ -92,8 +92,8 @@ public class UserLoginController {
 
             if (jsonOpenIdConfig != null) {
 
-                jwksUrl = jsonOpenIdConfig.get("jwks_uri") != null ? jsonOpenIdConfig.get("jwks_uri").asText().replace(externalDexUrl, internalDexUrl) : null;
-                tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint") != null ? jsonOpenIdConfig.get("token_endpoint").asText().replaceAll(externalDexUrl, internalDexUrl) : null;
+                jwksUrl = jsonOpenIdConfig.get("jwks_uri") != null ? jsonOpenIdConfig.get("jwks_uri").asText().replace(externalDexUrl, internalDexUrl).replaceFirst(idpcm.getExternalProtocol(), idpcm.getInternalProtocol()) : null;
+                tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint") != null ? jsonOpenIdConfig.get("token_endpoint").asText().replaceAll(externalDexUrl, internalDexUrl).replaceFirst(idpcm.getExternalProtocol(), idpcm.getInternalProtocol()) : null;
                 authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint") != null ? jsonOpenIdConfig.get("authorization_endpoint").asText() : null;
                 logger.debug("authEndpointUrl: " + authEndpointUrl);
                 logger.debug("tokenEndpointUrl: " + tokenEndpointUrl);
