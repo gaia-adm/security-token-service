@@ -17,7 +17,7 @@ public class UserLoginControllerTest extends TestCase {
         String domain = "gaia-local.skydns.local";
         String internalDexServer = "dexworker.skydns.local";
         String internalPort = "5556";
-        String externalPort = "88";
+        String externalPort = "444";
 
         String token_endpoint = "http://gaia-local.skydns.local:88/token";
         String jwks_uri = "http://gaia-local.skydns.local:88/keys";

@@ -24,7 +24,7 @@ public class DexConnectionManagerTest {
         IDPConnectManager idpcm = DexConnectionManager.getInstance();
         assertEquals("Domain", idpcm.getConnectionDetails().get("domain"), "gaia-local.skydns.local");
         assertEquals("internalDexUrl", idpcm.getConnectionDetails().get("internalProtocol")+"://"+idpcm.getConnectionDetails().get("internalDexServer")+":"+idpcm.getConnectionDetails().get("internalPort"), "http://dexworker.skydns.local:5556");
-        assertEquals("externalDexUrl", idpcm.getConnectionDetails().get("externalDexUrl"), "https://gaia-local.skydns.local:88");
+        assertEquals("externalDexUrl", idpcm.getConnectionDetails().get("externalDexUrl"), "https://gaia-local.skydns.local:444");
         assertEquals("discoveryUrl", idpcm.getConnectionDetails().get("discoveryUrl"), "http://dexworker.skydns.local:5556/.well-known/openid-configuration");
     }
 

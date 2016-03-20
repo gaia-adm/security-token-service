@@ -93,7 +93,7 @@ public class UserLoginController {
 
                 jwksUrl = jsonOpenIdConfig.get("jwks_uri") != null ? switchToInternalUrl(jsonOpenIdConfig.get("jwks_uri").asText()) : null;
                 tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint") != null ? switchToInternalUrl(jsonOpenIdConfig.get("token_endpoint").asText()) : null;
-                authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint") != null ? jsonOpenIdConfig.get("authorization_endpoint").asText().replace(idpConnectionDetails.get("externalProtocol"), idpConnectionDetails.get("internalProtocol")) : null;
+                authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint") != null ? jsonOpenIdConfig.get("authorization_endpoint").asText().replace(idpConnectionDetails.get("internalProtocol"), idpConnectionDetails.get("externalProtocol")).replace(idpConnectionDetails.get("externalHttpPort"), idpConnectionDetails.get("externalPort")) : null;
                 logger.debug("authEndpointUrl: " + authEndpointUrl);
                 logger.debug("tokenEndpointUrl: " + tokenEndpointUrl);
                 logger.debug("jwksUrl: " + jwksUrl);
@@ -351,7 +351,9 @@ public class UserLoginController {
     }
 
     String switchToInternalUrl(String externalUrl) {
-        return externalUrl.replace(domain, idpConnectionDetails.get("internalDexServer")).replace(idpConnectionDetails.get("externalPort"), idpConnectionDetails.get("internalPort")).replace(idpConnectionDetails.get("externalProtocol"), idpConnectionDetails.get("internalProtocol"));
+        String internalUrl =  externalUrl.replace(domain, idpConnectionDetails.get("internalDexServer")).replace(idpConnectionDetails.get("externalHttpPort"), idpConnectionDetails.get("internalPort")).replace(idpConnectionDetails.get("externalProtocol"), idpConnectionDetails.get("internalProtocol"));
+        logger.info("Switch from " + externalUrl + " to " + internalUrl);
+        return internalUrl;
     }
 
 }

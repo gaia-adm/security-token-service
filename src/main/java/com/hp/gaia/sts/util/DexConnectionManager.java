@@ -19,7 +19,8 @@ public class DexConnectionManager implements IDPConnectManager {
     private final static String internalProtocol = "http";
     private final static String externalProtocol = "https";
     private final static String internalPort = "5556";
-    private final static String externalPort = "88";
+    private final static String externalPort = "444";
+    private final static String externalHttpPort = "88";
 
     private static final DexConnectionManager instance = new DexConnectionManager();
     private Map<String, String> dexConnectionDetails = new HashMap<>();
@@ -56,6 +57,7 @@ public class DexConnectionManager implements IDPConnectManager {
             dexConnectionDetails.put("internalDexServer", internalDexServer);
             dexConnectionDetails.put("internalPort", internalPort);
             dexConnectionDetails.put("externalPort", externalPort);
+            dexConnectionDetails.put("externalHttpPort", externalHttpPort);
             dexConnectionDetails.put("internalProtocol", internalProtocol);
             dexConnectionDetails.put("externalProtocol", externalProtocol);
 
