@@ -55,7 +55,6 @@ public class UserLoginController {
     private final static Map<String, String> idpConnectionDetails = idpcm.getConnectionDetails();
     private final static Map<String, String> idpClientDetails = idpcm.getClientDetails();
 
-    private final static String internalDexUrl = idpConnectionDetails.get("internalDexUrl"); //"http://dexworker.skydns.local:5556";
     private final static String externalDexUrl = idpConnectionDetails.get("externalDexUrl"); //"http://gaia.skydns.local:88";
     private final static String discoveryUrl = idpConnectionDetails.get("discoveryUrl"); //internalDexUrl + "/.well-known/openid-configuration";
     private final static String domain = idpConnectionDetails.get("domain");
@@ -72,7 +71,7 @@ public class UserLoginController {
     @PostConstruct
     void init() {
 
-        if(! Boolean.valueOf(System.getenv("noDex"))) {
+        if (!Boolean.valueOf(System.getenv("noDex"))) {
 
 
             if (!validateConfiguration()) {
@@ -92,9 +91,9 @@ public class UserLoginController {
 
             if (jsonOpenIdConfig != null) {
 
-                jwksUrl = jsonOpenIdConfig.get("jwks_uri") != null ? jsonOpenIdConfig.get("jwks_uri").asText().replace(externalDexUrl, internalDexUrl) : null;
-                tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint") != null ? jsonOpenIdConfig.get("token_endpoint").asText().replaceAll(externalDexUrl, internalDexUrl) : null;
-                authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint") != null ? jsonOpenIdConfig.get("authorization_endpoint").asText() : null;
+                jwksUrl = jsonOpenIdConfig.get("jwks_uri") != null ? switchToInternalUrl(jsonOpenIdConfig.get("jwks_uri").asText()) : null;
+                tokenEndpointUrl = jsonOpenIdConfig.get("token_endpoint") != null ? switchToInternalUrl(jsonOpenIdConfig.get("token_endpoint").asText()) : null;
+                authEndpointUrl = jsonOpenIdConfig.get("authorization_endpoint") != null ? jsonOpenIdConfig.get("authorization_endpoint").asText().replace(idpConnectionDetails.get("internalProtocol"), idpConnectionDetails.get("externalProtocol")).replace(idpConnectionDetails.get("externalHttpPort"), idpConnectionDetails.get("externalPort")) : null;
                 logger.debug("authEndpointUrl: " + authEndpointUrl);
                 logger.debug("tokenEndpointUrl: " + tokenEndpointUrl);
                 logger.debug("jwksUrl: " + jwksUrl);
@@ -127,14 +126,14 @@ public class UserLoginController {
         Set<String> connectionBadDetails = idpConnectionDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
         Set<String> clientBadDetails = idpClientDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
 
-        if(!connectionBadDetails.isEmpty()){
+        if (!connectionBadDetails.isEmpty()) {
             result = false;
-            connectionBadDetails.stream().forEach( e -> logger.error("Empty or null value provided for " + e));
+            connectionBadDetails.stream().forEach(e -> logger.error("Empty or null value provided for " + e));
         }
 
-        if(!clientBadDetails.isEmpty()){
+        if (!clientBadDetails.isEmpty()) {
             result = false;
-            clientBadDetails.stream().forEach( e -> logger.error("Empty or null value provided for " + e));
+            clientBadDetails.stream().forEach(e -> logger.error("Empty or null value provided for " + e));
         }
 
         return result;
@@ -153,7 +152,7 @@ public class UserLoginController {
     @ResponseBody
     void loginCallback(@RequestParam(value = "code", required = false) String code, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-        if(code == null){
+        if (code == null) {
             //password reset flow or just a hack - redirecting to logout
             logout(httpServletRequest, httpServletResponse);
         } else {
@@ -187,9 +186,11 @@ public class UserLoginController {
             }
 
             httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
-            Cookie cookie = createIdentityTokenCookie(jsonDexResponse.get("id_token").asText(), null);
+            if (jsonDexResponse != null && jsonDexResponse.get("id_token") != null) {
+                Cookie cookie = createIdentityTokenCookie(jsonDexResponse.get("id_token").asText(), null);
+                httpServletResponse.addCookie(cookie);
+            }
 
-            httpServletResponse.addCookie(cookie);
             httpServletResponse.setStatus(302);
         }
 
@@ -223,7 +224,7 @@ public class UserLoginController {
 
             return new ResponseEntity<>(body.toString(), headers, HttpStatus.OK);
         } else {    //bad cookie or not presented at all
-            String message = (cookieToDecode == null ) ? "No token provided" : "Token verification has failed for " + cookieToDecode.getValue();
+            String message = (cookieToDecode == null) ? "No token provided" : "Token verification has failed for " + cookieToDecode.getValue();
             logger.error(message);
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -231,11 +232,11 @@ public class UserLoginController {
 
     @RequestMapping(value = "/logout")
     @ResponseBody
-    void logout(HttpServletRequest request, HttpServletResponse response){
+    void logout(HttpServletRequest request, HttpServletResponse response) {
 
-        if(request.getCookies() != null){
-            for(Cookie cookie : request.getCookies()){
-                if(cookie.getName().equals("gaia.it")){
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals("gaia.it")) {
                     response.addCookie(createIdentityTokenCookie(null, 0));
                 }
             }
@@ -320,7 +321,7 @@ public class UserLoginController {
                 throw new RuntimeException("invalid email: " + claims.get("email").toString());
             }
             jsonClaims.put("email", claims.get("email").toString());
-            if(claims.get("sub").toString().isEmpty()){
+            if (claims.get("sub").toString().isEmpty()) {
                 throw new RuntimeException("no sub provided");
             }
             jsonClaims.put("sub", claims.get("sub").toString());
@@ -337,16 +338,22 @@ public class UserLoginController {
         return !StringUtils.isEmpty(emailAddress) && emailAddress.contains("@");
     }
 
-    private Cookie createIdentityTokenCookie(String value, Integer expiration){
+    private Cookie createIdentityTokenCookie(String value, Integer expiration) {
         Cookie cookie = new Cookie("gaia.it", value);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setDomain(domain);
         cookie.setSecure(false);
-        if(expiration!=null) {
+        if (expiration != null) {
             cookie.setMaxAge(expiration);
         }
         return cookie;
+    }
+
+    String switchToInternalUrl(String externalUrl) {
+        String internalUrl =  externalUrl.replace(domain, idpConnectionDetails.get("internalDexServer")).replace(idpConnectionDetails.get("externalHttpPort"), idpConnectionDetails.get("internalPort")).replace(idpConnectionDetails.get("externalProtocol"), idpConnectionDetails.get("internalProtocol"));
+        logger.info("Switch from " + externalUrl + " to " + internalUrl);
+        return internalUrl;
     }
 
 }
