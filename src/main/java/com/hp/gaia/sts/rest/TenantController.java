@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -44,9 +45,9 @@ public class TenantController {
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (DataAccessException dae) {
             dae.printStackTrace();
-            return new ResponseEntity<>("Failed to create tenant, see logs for more details", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.TEXT_PLAIN).body("Failed to create tenant, see logs for more details");
         } catch (IOException ioe) {
-            return new ResponseEntity<>("Bad input received", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.TEXT_PLAIN).body("Bad input received");
         }
     }
 
@@ -59,10 +60,10 @@ public class TenantController {
             return new ResponseEntity<>(objectMapper.writeValueAsString(tenant), HttpStatus.OK);
         } catch (DataAccessException dae) {
             dae.printStackTrace();
-            return new ResponseEntity<>("Tenant not found with the name provided", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.TEXT_PLAIN).body("Tenant not found with the name provided");
         } catch (JsonProcessingException jpe) {
             jpe.printStackTrace();
-            return new ResponseEntity<>("Failed to return tenant data", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.TEXT_PLAIN).body("Failed to return tenant data");
         }
     }
 
