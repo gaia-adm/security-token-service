@@ -248,7 +248,7 @@ public class UserLoginController {
     }
 
 
-    private boolean verifyIdToken(Cookie cookie) {
+    boolean verifyIdToken(Cookie cookie) {
 
         String stringIdToken = cookie.getValue();
         try {
@@ -281,7 +281,7 @@ public class UserLoginController {
         return false;
     }
 
-    private JsonNode decodeIdToken(Cookie cookieToDecode) throws RuntimeException {
+    JsonNode decodeIdToken(Cookie cookieToDecode) throws RuntimeException {
 
         final JsonNodeFactory factory = JsonNodeFactory.instance;
 
