@@ -55,9 +55,10 @@ public class UserLoginController {
     private final static Map<String, String> idpConnectionDetails = idpcm.getConnectionDetails();
     private final static Map<String, String> idpClientDetails = idpcm.getClientDetails();
 
-    private final static String externalDexUrl = idpConnectionDetails.get("externalDexUrl"); //"http://gaia.skydns.local:88";
+    private final static String externalDexUrl = idpConnectionDetails.get("externalDexUrl"); //"https://gaia.skydns.local:444";
     private final static String discoveryUrl = idpConnectionDetails.get("discoveryUrl"); //internalDexUrl + "/.well-known/openid-configuration";
     private final static String domain = idpConnectionDetails.get("domain");
+    private final static String internalIssuerUrl = idpConnectionDetails.get("internalIssuerUrl"); //"http://gaia.skydns.local:88";
 
     private final static String clientId = idpClientDetails.get("dexClientId");
     private final static String clientSecret = idpClientDetails.get("dexClientSecret");
@@ -302,7 +303,12 @@ public class UserLoginController {
             }
             jsonClaims.put("typ", token.getHeader().getType().getType());
             if (!claims.get("iss").toString().equals(externalDexUrl)) {
-                throw new RuntimeException("bad issue: " + claims.get("iss").toString());
+                //claims.get("iss").toString() is http://gaia-local.skydns.local:88 due to the fact that internal communications are done via http
+                //externalDexUrl is https://gaia-local.skydns.local:444
+                //in order to prevent failure there is a workaround, but if it does not help, then issuer is really invalid
+                if(!claims.get("iss").toString().equals(internalIssuerUrl)){
+                    throw new RuntimeException("bad issue: " + claims.get("iss").toString());
+                }
             }
             jsonClaims.put("iss", claims.get("iss").toString());
             if (!claims.get("aud").toString().replaceAll("\\[", "").replaceAll("\\]", "").equals(clientId)) {

@@ -64,6 +64,10 @@ public class DexConnectionManager implements IDPConnectManager {
             dexConnectionDetails.put("externalHttpPort", externalHttpPort);
             dexConnectionDetails.put("internalProtocol", internalProtocol);
             dexConnectionDetails.put("externalProtocol", externalProtocol);
+            //Since internal communication between services goes via http, claims.get("iss") validation in UserLoginController.decodeIdToken method fails
+            //InternalIssuerUrl is a workaround for this problem until we switch to the SSL based internal communication
+            String internalIssuerUrl = internalProtocol+"://"+domain+":"+externalHttpPort;
+            dexConnectionDetails.put("internalIssuerUrl", internalIssuerUrl);
 
         }
 
