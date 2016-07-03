@@ -1,0 +1,19 @@
+#title {
+  background-color: #f0f0f0;
+  text-align: center;
+  color: #003366;
+}
+
+#subtitle {
+  background-color: #e7e7e7;
+  text-align: center;
+  color: #003366;
+}
+
+#content {
+  margin-left: auto,
+  margin-right: auto,
+  align: center,
+  text-align: center,
+  background-color: green
+}
