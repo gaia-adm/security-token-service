@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by belozovs on 6/28/2016.
@@ -90,12 +89,12 @@ public class IdentityTokenFacade {
             return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Client is missing");
         }
 
-        String uri="http://localhost:8080/sts/oauth/token?grant_type=client_credentials&client_id={cid}&client_secret={cs}";
+        String uri = "http://localhost:8080/sts/oauth/token?grant_type=client_credentials&client_id={cid}&client_secret={cs}";
         Map<String, String> params = new HashMap<>();
-        params.put("cid",cd.getClientId());
-        params.put("cs",cd.getClientSecret());
+        params.put("cid", cd.getClientId());
+        params.put("cs", cd.getClientSecret());
         String token = restTemplate.postForObject(uri, null, String.class, params);
-        if(token == null){
+        if (token == null) {
             return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to obtain token");
         }
 
@@ -121,14 +120,31 @@ public class IdentityTokenFacade {
     ClientDetails findMyClient(Long tenantId) {
         List<ClientDetails> clientDetails = ((ClientRegistrationService) clientDetailsService).listClientDetails();
 
-        Optional<ClientDetails> found = clientDetails.stream()
+        for (ClientDetails cd : clientDetails) {
+            if (cd.getAdditionalInformation() != null && cd.getAdditionalInformation().get("tenantId") != null) {
+
+                if(cd.getAdditionalInformation().get("tenantId") instanceof java.lang.Integer){
+                    if(tenantId.equals(((Integer) cd.getAdditionalInformation().get("tenantId")).longValue())){
+                        return cd;
+                    }
+                } else {
+                    if(tenantId.equals(cd.getAdditionalInformation().get("tenantId"))){
+                        return cd;
+                    }
+                }
+            }
+        }
+        return null;
+
+
+/*        Optional<ClientDetails> found = clientDetails.stream()
                 .filter(cd -> cd.getAdditionalInformation()!=null && tenantId.equals(cd.getAdditionalInformation().get("tenantId")))
                 .findFirst();
         if (found.isPresent()) {
             return found.get();
         } else {
             return null;
-        }
+        }*/
 
     }
 
