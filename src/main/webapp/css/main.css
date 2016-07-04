@@ -11,9 +11,26 @@
 }
 
 #content {
-  margin-left: auto,
-  margin-right: auto,
-  align: center,
-  text-align: center,
-  background-color: green
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center
+}
+
+.emptyCell {
+      padding-left: 10em
+}
+.emptyParagraph {
+      padding-top: 1em
+}
+.imageSelector {
+	width: 256px;
+	height: 256px;
+	border:0
+}
+.explainingText {
+	font-family: "Times New Roman", Times, serif;
+	font-style: italic;
+	font-size: 1.2em;
+	font-weight: bold;
+	color: #230354
 }
