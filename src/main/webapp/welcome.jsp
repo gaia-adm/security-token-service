@@ -12,15 +12,16 @@
 <p class="emptyParagraph"/>
 <p class="emptyParagraph"/>
 <p class="emptyParagraph"/>
+<% String hostName = request.getServerName(); %>
 <table id=content>
 <tr>
 <td>
-<a href="https://gaia-local.skydns.local">
+<a href="https://<%=hostName%>">
   <img src="${pageContext.request.contextPath}/images/iconUI.png" alt="Open UI" class="imageSelector"></a>
 </td>
 <td class="emptyCell"/>
 <td>
-<a href="http://gaia-local.skydns.local:4000/gau">
+<a href="https://<%=hostName%>:444/gau">
   <img src="${pageContext.request.contextPath}/images/iconConfig.png" alt="Open Admin UI" class="imageSelector"></a>
 </a>
 <td>
