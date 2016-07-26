@@ -27,9 +27,8 @@ public class CustomTokenController {
     }
 
     @RequestMapping(value = "oauth/token/revoke", method = RequestMethod.DELETE)
-    public
     @ResponseBody
-    void create(@RequestParam("token") String value) throws InvalidClientException {
+    public void create(@RequestParam("token") String value) throws InvalidClientException {
         defaultTokenServices.revokeToken(value);
     }
 }

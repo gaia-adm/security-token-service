@@ -1,0 +1,30 @@
+{
+  "User": "jetty",
+  "ExposedPorts": {
+    "8080/tcp": {},
+    "9093/tcp": {},
+    "5005/tcp": {}
+  },
+  "HostConfig": {
+    "PortBindings": {
+      "5005/tcp": [
+        {
+          "HostIp": "0.0.0.0",
+          "HostPort": "5005"
+        }
+      ],
+      "9093/tcp": [
+        {
+          "HostIp": "0.0.0.0",
+          "HostPort": "9093"
+        }
+      ],
+      "8080/tcp": [
+        {
+          "HostIp": "0.0.0.0",
+          "HostPort": "9001"
+        }
+      ]
+    }
+  }
+}

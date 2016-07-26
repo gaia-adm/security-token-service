@@ -1,0 +1,27 @@
+How to deploy local STS to vagrant environment
+- Tested with Docker 1.9 and IntelliJ 2016.1.2
+- Use case: you have STS running via fleet, tenant/token created with it and now you want to develop/debug STS while working with real environment
+- It also supposes debugging via port 5555
+
+Prerequisites:
+1. Gaia is running on vagrant
+2. security-token-service unit is stopped by fleet
+3. STS project is opened in IntelliJ with Docker plugin installed
+4. DNS resolution is set (for Windows: C:\Windows\System32\drivers\etc\hosts <- 172.17.8.101	gaia-local.skydns.local)
+5. Port forwarding: 80,88,443,444,4001, 5005
+
+
+Docker plugin configuration
+1. Docker server:
+- APU URL: http://<VAGRANTURL>:2375 (real VAGRANTURL can be taken from inet field of "ifconfig eth01" command output)
+- Certificates folder: C:/Users/%user%/.vagrant.d/insecure_private_key
+- Docker Compose executable: docker-compose
+2. Deployment params:
+- Deployment: Dockerfile
+- Image tag: any
+- Container name: sts
+- Debug port: 5005
+3. Container params:
+- Json file: container_settings.json in current directory
+- Command: /usr/bin/java -agentlib:jdwp=transport=dt_socket,address=5555,suspend=n,server=y -Djetty.logs=/usr/local/jetty/logs -Djetty.home=/usr/local/jetty -Djetty.base=/var/lib/jetty -Djava.io.tmpdir=/tmp/jetty -jar /usr/local/jetty/start.jar jetty.state=/run/jetty/jetty.state jetty-started.xml
+- Environment variables: DEX_APP_CLIENT_ID, DEX_APP_CLIENT_SECRET, DEX_APP_REDIRECTURL_0 as set in /etc/env-dex-client file; SERVICE_8080_NAME (sts), SERVICE_8080_TAGS (master), etcdUrl (http://172.17.8.101:4001), INTERNAL_DEX_SERVER (dexworker.skydns.local)
