@@ -145,7 +145,8 @@ public class UserLoginController {
     @RequestMapping("/login")
     @ResponseBody
     void login(HttpServletResponse httpServletResponse) {
-        httpServletResponse.setHeader("Location", authEndpointUrl + "?client_id=" + clientId + "&redirect_uri=" + callbackUrl + "&response_type=code&scope=openid+email+profile&state=");
+//        httpServletResponse.setHeader("Location", authEndpointUrl + "?client_id=" + clientId + "&redirect_uri=" + callbackUrl + "&response_type=code&scope=openid+email+profile&state=");
+        httpServletResponse.setHeader("Location", "https://acmclient.skydns.local");
         httpServletResponse.setStatus(302);
     }
 
