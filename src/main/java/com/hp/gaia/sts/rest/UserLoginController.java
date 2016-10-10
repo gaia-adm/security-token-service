@@ -146,7 +146,7 @@ public class UserLoginController {
     @ResponseBody
     void login(HttpServletResponse httpServletResponse) {
 //        httpServletResponse.setHeader("Location", authEndpointUrl + "?client_id=" + clientId + "&redirect_uri=" + callbackUrl + "&response_type=code&scope=openid+email+profile&state=");
-        httpServletResponse.setHeader("Location", "https://acmc.gaia-local.skydns.local");
+        httpServletResponse.setHeader("Location", "https://acmc.gaia-local.skydns.local/acmc");
         httpServletResponse.setStatus(302);
     }
 
