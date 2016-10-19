@@ -26,7 +26,7 @@ public class CustomTokenEnhancer implements TokenEnhancer {
 
     @Autowired
     private RestTemplate restTemplate;
-    @Autowired
+
     private ObjectMapper mapper;
 
     @Autowired
