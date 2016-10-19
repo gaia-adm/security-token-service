@@ -1,7 +1,9 @@
 package com.hp.gaia.sts.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,13 +27,15 @@ import java.util.Map;
 /**
  * Created by belozovs on 6/28/2016.
  * <p>
- * Transition from gaia.it (identity token received via dex login) to gaia.at (api token) required for administrative operations (webhook configuration API)
+ * Transition from gaia.token (identity token received via AcM login) to gaia.at (api token) required for administrative operations (webhook configuration API)
  */
 
 @RestController
 public class IdentityTokenFacade {
 
-    private static final String identityTokenName = "gaia.it";
+    private final static Logger logger = LoggerFactory.getLogger(IdentityTokenFacade.class);
+
+    private static final String identityTokenName = "gaia.token";
     static final ObjectMapper om = new ObjectMapper();
 
     @Autowired
@@ -72,33 +76,33 @@ public class IdentityTokenFacade {
             return createBadResponse(HttpStatus.UNAUTHORIZED, "No identity token found");
         }
 
-        boolean verified = ulk.verifyIdToken(identityCookie);
-        if (!verified) {
-            return createBadResponse(HttpStatus.FORBIDDEN, "Identity verification fails");
-        }
-        JsonNode decoded = null;
-        try {
-            decoded = ulk.decodeIdToken(identityCookie);
-        } catch (Exception e) {
-            return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        String verified = ulk.verifyIdTokenByAcm(identityCookie);
+        if (verified == null) {
+            return createBadResponse(HttpStatus.FORBIDDEN, "Identity verification failed");
         }
 
-        Long tenantId = fetchTenantFromEmail(decoded.get("email").asText());
-        ClientDetails cd = findMyClient(tenantId);
-        if (cd == null) {
-            return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Client is missing");
-        }
+        JsonNode identityNode = om.readTree(verified);
+        if (identityNode.get("accounts").isArray() && identityNode.get("accounts").size()>0){
+            Long tenantId = identityNode.get("accounts").get(0).get("account_id").asLong();
+            ClientDetails cd = findMyClient(tenantId);
+            if (cd == null) {
+                return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Client is missing");
+            }
+            String uri = "http://localhost:8080/sts/oauth/token?grant_type=client_credentials&client_id={cid}&client_secret={cs}";
+            Map<String, String> params = new HashMap<>();
+            params.put("cid", cd.getClientId());
+            params.put("cs", cd.getClientSecret());
+            String apiToken = restTemplate.postForObject(uri, null, String.class, params);
+            if (apiToken == null) {
+                return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to obtain token");
+            }
+            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(apiToken);
 
-        String uri = "http://localhost:8080/sts/oauth/token?grant_type=client_credentials&client_id={cid}&client_secret={cs}";
-        Map<String, String> params = new HashMap<>();
-        params.put("cid", cd.getClientId());
-        params.put("cs", cd.getClientSecret());
-        String token = restTemplate.postForObject(uri, null, String.class, params);
-        if (token == null) {
-            return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to obtain token");
-        }
 
-        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(token);
+        } else {
+            logger.warn("User with id " + identityNode.get("id") + " is not associated with any account");
+            return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Account is missing");
+        }
     }
 
     ResponseEntity<String> createBadResponse(HttpStatus status, String message) {

@@ -17,7 +17,7 @@ public class AcmConnectionManager implements IDPConnectManager{
 
     private final static String internalProtocol = "http";
     private final static String externalProtocol = "https";
-    private final static String internalPort = "3100";
+    private final static String internalPort = "3000";
     private final static String externalPort = "444";
     private final static String externalHttpPort = "88";
 

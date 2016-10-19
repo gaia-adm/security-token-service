@@ -1,8 +1,10 @@
 package com.hp.gaia.sts.util;
 
-import com.hp.gaia.sts.dao.TenantDao;
-import com.hp.gaia.sts.dto.Tenant;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.UnapprovedClientAuthenticationException;
@@ -10,7 +12,9 @@ import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
+import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,9 +25,14 @@ import java.util.Map;
 public class CustomTokenEnhancer implements TokenEnhancer {
 
     @Autowired
-    private ClientDetailsService clientDetailsService;
+    private RestTemplate restTemplate;
     @Autowired
-    private TenantDao tenantDao;
+    private ObjectMapper mapper;
+
+    @Autowired
+    private ClientDetailsService clientDetailsService;
+
+    private final static IDPConnectManager idcm = AcmConnectionManager.getInstance();
 
     @Override
     public OAuth2AccessToken enhance(OAuth2AccessToken accessToken, OAuth2Authentication authentication) {
@@ -36,14 +45,19 @@ public class CustomTokenEnhancer implements TokenEnhancer {
             throw new UnapprovedClientAuthenticationException("Client configuration is wrong, the token cannot be created");
         }
 
-
-        Tenant tenant = tenantDao.getTenantById(tenantId.longValue());
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("tenantId", tenant.getTenantId());
-        map.put("createdAt", System.currentTimeMillis());
-
-        ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(map);
+        //verify that tenant exists
+        String acmAccountUrl = idcm.getConnectionDetails().get("internalProtocol")+"://"+idcm.getConnectionDetails().get("internalIdmServer")+":"+idcm.getConnectionDetails().get("internalPort")+"/acms/api/accounts/"+tenantId.toString();
+        ResponseEntity<String> resp = restTemplate.getForEntity(acmAccountUrl, String.class);
+        try {
+            JsonNode jsonResp = mapper.readTree(resp.getBody());
+            Map<String, Object> map = new HashMap<>();
+            map.put("tenantId", jsonResp.get("id").asLong());
+            map.put("createdAt", System.currentTimeMillis());
+            ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(map);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeJsonMappingException("Failed to parse getAccountById response");
+        }
 
         return accessToken;
     }

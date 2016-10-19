@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
@@ -288,6 +289,51 @@ public class UserLoginController {
         }
 
         return false;
+    }
+
+
+
+    /**
+     * @param cookie
+     * @return the identity (user id and name, accounts, roles, etc.) OR null, if no valid identity found
+     */
+    String verifyIdTokenByAcm(Cookie cookie) {
+
+        String stringIdToken = cookie.getValue();
+        logger.info("StringIdToken is " + stringIdToken);
+
+        //http://acms.gaia-local.skydns.local:88/acms/api/users/self with gaia.token cookie (sent by client)
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.add("Cookie","gaia.token="+stringIdToken);
+        HttpEntity entity = new HttpEntity(headers);
+
+        String acmVerificationUrl = idcm.getConnectionDetails().get("internalProtocol")+"://"+idcm.getConnectionDetails().get("internalIdmServer")+":"+idcm.getConnectionDetails().get("internalPort")+"/acms/api/users/self";
+//        logger.debug("Verifying against " + acmVerificationUrl);
+
+        ResponseEntity<String> userData;
+        try {
+            userData = restTemplate.exchange(acmVerificationUrl,HttpMethod.GET,entity, String.class);
+        } catch (RestClientException rce) {
+            logger.error("Failed to verify gaia.token against AcM", rce);
+            return null;
+        }
+
+//        logger.trace("User data string: " + userData.getBody());
+
+        JsonNode jsonBody = null;
+        try {
+            jsonBody = mapper.readTree(userData.getBody());
+        } catch (IOException e) {
+            logger.error("Failed to parse the identity verification response", e);
+            return null;
+        }
+
+        if(jsonBody.get("id").toString() != null && !jsonBody.get("id").asText().isEmpty()){
+            return jsonBody.toString();
+        } else {
+            return null;
+        }
     }
 
     JsonNode decodeIdToken(Cookie cookieToDecode) throws RuntimeException {
