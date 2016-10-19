@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.hp.gaia.sts.util.AcmConnectionManager;
 import com.hp.gaia.sts.util.DexConnectionManager;
 import com.hp.gaia.sts.util.IDPConnectManager;
 import com.nimbusds.jose.JOSEException;
@@ -50,6 +51,12 @@ public class UserLoginController {
     RestTemplate restTemplate;
 
     ObjectMapper mapper = new ObjectMapper();
+
+    private final static IDPConnectManager idcm = AcmConnectionManager.getInstance();
+    private final static Map<String, String> idcmConnectionDetails = idcm.getConnectionDetails();
+    private final static String idcmDomain = idcmConnectionDetails.get("domain");
+    private final static String idcmPort = idcmConnectionDetails.get("externalPort");
+    private final static String idcmProtocol = idcmConnectionDetails.get("externalProtocol");
 
     private final static IDPConnectManager idpcm = DexConnectionManager.getInstance();
     private final static Map<String, String> idpConnectionDetails = idpcm.getConnectionDetails();
@@ -146,7 +153,7 @@ public class UserLoginController {
     @ResponseBody
     void login(HttpServletResponse httpServletResponse) {
 //        httpServletResponse.setHeader("Location", authEndpointUrl + "?client_id=" + clientId + "&redirect_uri=" + callbackUrl + "&response_type=code&scope=openid+email+profile&state=");
-        httpServletResponse.setHeader("Location", "https://acmc.gaia-local.skydns.local");
+        httpServletResponse.setHeader("Location", idcmProtocol+"://acmc."+idcmDomain+"/acmc");
         httpServletResponse.setStatus(302);
     }
 
@@ -189,7 +196,7 @@ public class UserLoginController {
 
             httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
             if (jsonDexResponse != null && jsonDexResponse.get("id_token") != null) {
-                Cookie cookie = createIdentityTokenCookie(jsonDexResponse.get("id_token").asText(), null);
+                Cookie cookie = createIdentityTokenCookie("gaia.token",jsonDexResponse.get("id_token").asText(), null);
                 httpServletResponse.addCookie(cookie);
             }
 
@@ -238,8 +245,9 @@ public class UserLoginController {
 
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if (cookie.getName().equals("gaia.it")) {
-                    response.addCookie(createIdentityTokenCookie(null, 0));
+                if (cookie.getName().equals("gaia.token")) {
+                    response.addCookie(createIdentityTokenCookie("gaia.token", null, 0));
+                    response.addCookie(createIdentityTokenCookie("user",null, 0));
                 }
             }
         }
@@ -345,11 +353,11 @@ public class UserLoginController {
         return !StringUtils.isEmpty(emailAddress) && emailAddress.contains("@");
     }
 
-    private Cookie createIdentityTokenCookie(String value, Integer expiration) {
-        Cookie cookie = new Cookie("gaia.it", value);
+    private Cookie createIdentityTokenCookie(String name, String value, Integer expiration) {
+        Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setDomain(domain);
+        cookie.setDomain("."+idcmDomain);
         cookie.setSecure(false);
         if (expiration != null) {
             cookie.setMaxAge(expiration);
