@@ -29,7 +29,7 @@ test:
   override:
     - docker run --name stsdb -d -p 9001:8080 -e noDex=true -e SPRING_PROFILES_ACTIVE=db gaiaadm/sts; sleep 10
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
-//    - ./SystemTestCurl.sh
+#    - ./SystemTestCurl.sh
     - docker stop stsdb
     - /home/ubuntu/etcd-v2.2.0-linux-amd64/etcd --debug -advertise-client-urls=http://0.0.0.0:2379 -listen-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001 :
         background: true
@@ -37,7 +37,7 @@ test:
     - curl -i http://localhost:4001/version
     - docker run -d --name stsetcd -p 9001:8080 -e noDex=true -e etcdUrl=http://$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1):4001 gaiaadm/sts; sleep 10
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
-//    - ./SystemTestCurl.sh
+#    - ./SystemTestCurl.sh
 deployment:
   continuous:
     branch: [master, develop, /.*feature_.*/]
