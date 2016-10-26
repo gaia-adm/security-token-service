@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.provider.ClientAlreadyExistsException;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationService;
+import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -140,7 +142,22 @@ public class IdentityTokenFacade {
                 }
             }
         }
-        return null;
+
+        //if client not found let's create it.
+        //client only used for API token generation and so not visible and usable in any other service
+        logger.info("Creating a new client for tenant " + tenantId);
+        String newClient = "{\"client_id\":\"restapp" + tenantId + "\",\"client_secret\":\"secret\",\"scope\":\"read,write,trust\",\"authorized_grant_types\":\"client_credentials\",\"authorities\":\"ROLE_APP\",\"tenantId\":" + tenantId + "}";
+        try {
+            ClientDetails newClientDetails = om.readValue(newClient, BaseClientDetails.class);
+            ((ClientRegistrationService) clientDetailsService).addClientDetails(newClientDetails);
+            return findMyClient(tenantId);  //just to re-check it is successfully created
+        } catch (ClientAlreadyExistsException caee) {
+            logger.error("Client already exists though wasn't found earlier for tenant "+tenantId, caee);
+            return null;
+        } catch (IOException ioe){
+            logger.error("Failed to find the existing client and create the new one for tenant "+tenantId, ioe);
+            return null;
+        }
     }
 
 }
