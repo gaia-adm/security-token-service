@@ -1,11 +1,11 @@
 package com.hp.gaia.sts.rest;
 
+import com.hp.gaia.sts.util.AcmConnectionProxy;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +47,9 @@ public class IdentityTokenFacade {
     @Autowired
     private ClientDetailsService clientDetailsService;
 
+    @Autowired
+    AcmConnectionProxy acmConnectionProxy;
+
     @PostConstruct
     void init() {
         System.out.println("Facade starting");
@@ -56,9 +59,6 @@ public class IdentityTokenFacade {
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<String> getMyToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
 
         Cookie identityCookie = null;
 
@@ -82,7 +82,7 @@ public class IdentityTokenFacade {
         }
 
         JsonNode identityNode = om.readTree(verified);
-        if (identityNode.get("accounts").isArray() && identityNode.get("accounts").size()>0){
+        if (identityNode.get("accounts").isArray() && identityNode.get("accounts").size() > 0) {
             Long tenantId = identityNode.get("accounts").get(0).get("account_id").asLong();
             ClientDetails cd = findMyClient(tenantId);
             if (cd == null) {
@@ -96,6 +96,8 @@ public class IdentityTokenFacade {
             if (apiToken == null) {
                 return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to obtain token");
             }
+            //Long tenantToCheck = om.readTree(apiToken).get("tenantId").asLong();
+            //TODO - boris: do we want to re-check tenant existence?
             return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(apiToken);
 
 
@@ -127,29 +129,18 @@ public class IdentityTokenFacade {
         for (ClientDetails cd : clientDetails) {
             if (cd.getAdditionalInformation() != null && cd.getAdditionalInformation().get("tenantId") != null) {
 
-                if(cd.getAdditionalInformation().get("tenantId") instanceof java.lang.Integer){
-                    if(tenantId.equals(((Integer) cd.getAdditionalInformation().get("tenantId")).longValue())){
+                if (cd.getAdditionalInformation().get("tenantId") instanceof java.lang.Integer) {
+                    if (tenantId.equals(((Integer) cd.getAdditionalInformation().get("tenantId")).longValue())) {
                         return cd;
                     }
                 } else {
-                    if(tenantId.equals(cd.getAdditionalInformation().get("tenantId"))){
+                    if (tenantId.equals(cd.getAdditionalInformation().get("tenantId"))) {
                         return cd;
                     }
                 }
             }
         }
         return null;
-
-
-/*        Optional<ClientDetails> found = clientDetails.stream()
-                .filter(cd -> cd.getAdditionalInformation()!=null && tenantId.equals(cd.getAdditionalInformation().get("tenantId")))
-                .findFirst();
-        if (found.isPresent()) {
-            return found.get();
-        } else {
-            return null;
-        }*/
-
     }
 
 }

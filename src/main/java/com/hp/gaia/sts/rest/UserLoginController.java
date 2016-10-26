@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hp.gaia.sts.util.AcmConnectionManager;
+import com.hp.gaia.sts.util.AcmConnectionProxy;
 import com.hp.gaia.sts.util.DexConnectionManager;
 import com.hp.gaia.sts.util.IDPConnectManager;
 import com.nimbusds.jose.JOSEException;
@@ -26,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
@@ -47,6 +47,9 @@ import java.util.stream.Collectors;
 public class UserLoginController {
 
     private final static Logger logger = LoggerFactory.getLogger(UserLoginController.class);
+
+    @Autowired
+    AcmConnectionProxy acmConnectionProxy;
 
     @Autowired
     RestTemplate restTemplate;
@@ -154,7 +157,7 @@ public class UserLoginController {
     @ResponseBody
     void login(HttpServletResponse httpServletResponse) {
 //        httpServletResponse.setHeader("Location", authEndpointUrl + "?client_id=" + clientId + "&redirect_uri=" + callbackUrl + "&response_type=code&scope=openid+email+profile&state=");
-        httpServletResponse.setHeader("Location", idcmProtocol+"://acmc."+idcmDomain+"/acmc");
+        httpServletResponse.setHeader("Location", idcmProtocol + "://acmc." + idcmDomain + "/acmc");
         httpServletResponse.setStatus(302);
     }
 
@@ -197,7 +200,7 @@ public class UserLoginController {
 
             httpServletResponse.setHeader("Location", httpServletRequest.getContextPath() + "/welcome.jsp");
             if (jsonDexResponse != null && jsonDexResponse.get("id_token") != null) {
-                Cookie cookie = createIdentityTokenCookie("gaia.token",jsonDexResponse.get("id_token").asText(), null);
+                Cookie cookie = createIdentityTokenCookie("gaia.token", jsonDexResponse.get("id_token").asText(), null);
                 httpServletResponse.addCookie(cookie);
             }
 
@@ -210,34 +213,30 @@ public class UserLoginController {
     @ResponseBody
     ResponseEntity<String> verify(HttpServletRequest request, HttpServletResponse response) {
 
-        boolean isVerified = false;
+        boolean isFound = false;
 
         Cookie cookieToDecode = null;
 
         Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("gaia.it")) {
-                isVerified = verifyIdToken(cookie);
-
-                cookieToDecode = cookie;
-                break;
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("gaia.token")) {
+                    isFound = true;
+                    String goodCookie = verifyIdTokenByAcm(cookie);
+                    if (goodCookie != null) {
+                        HttpHeaders headers = new HttpHeaders();
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+                        return new ResponseEntity<>(goodCookie, headers, HttpStatus.OK);
+                    } else {
+                        break;
+                    }
+                }
             }
-
-
         }
+        String message = (isFound) ? "Token verification has failed" : "No token provided";
+        logger.error(message);
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
-        if (isVerified) {
-            JsonNode body = decodeIdToken(cookieToDecode);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            return new ResponseEntity<>(body.toString(), headers, HttpStatus.OK);
-        } else {    //bad cookie or not presented at all
-            String message = (cookieToDecode == null) ? "No token provided" : "Token verification has failed for " + cookieToDecode.getValue();
-            logger.error(message);
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
     }
 
     @RequestMapping(value = "/logout")
@@ -248,7 +247,7 @@ public class UserLoginController {
             for (Cookie cookie : request.getCookies()) {
                 if (cookie.getName().equals("gaia.token")) {
                     response.addCookie(createIdentityTokenCookie("gaia.token", null, 0));
-                    response.addCookie(createIdentityTokenCookie("user",null, 0));
+                    response.addCookie(createIdentityTokenCookie("user", null, 0));
                 }
             }
         }
@@ -292,9 +291,8 @@ public class UserLoginController {
     }
 
 
-
     /**
-     * @param cookie
+     * @param cookie gaia.token cookie provided in request
      * @return the identity (user id and name, accounts, roles, etc.) OR null, if no valid identity found
      */
     String verifyIdTokenByAcm(Cookie cookie) {
@@ -303,36 +301,13 @@ public class UserLoginController {
         logger.info("StringIdToken is " + stringIdToken);
 
         //http://acms.gaia-local.skydns.local:88/acms/api/users/self with gaia.token cookie (sent by client)
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        headers.add("Cookie","gaia.token="+stringIdToken);
-        HttpEntity entity = new HttpEntity(headers);
 
-        String acmVerificationUrl = idcm.getConnectionDetails().get("internalProtocol")+"://"+idcm.getConnectionDetails().get("internalIdmServer")+":"+idcm.getConnectionDetails().get("internalPort")+"/acms/api/users/self";
-//        logger.debug("Verifying against " + acmVerificationUrl);
-
-        ResponseEntity<String> userData;
-        try {
-            userData = restTemplate.exchange(acmVerificationUrl,HttpMethod.GET,entity, String.class);
-        } catch (RestClientException rce) {
-            logger.error("Failed to verify gaia.token against AcM", rce);
+        String userDetails = acmConnectionProxy.userVerification(stringIdToken, null);
+        if (userDetails == null) {
+            logger.error("Failed to verify identity token, returns null");
             return null;
-        }
-
-//        logger.trace("User data string: " + userData.getBody());
-
-        JsonNode jsonBody = null;
-        try {
-            jsonBody = mapper.readTree(userData.getBody());
-        } catch (IOException e) {
-            logger.error("Failed to parse the identity verification response", e);
-            return null;
-        }
-
-        if(jsonBody.get("id").toString() != null && !jsonBody.get("id").asText().isEmpty()){
-            return jsonBody.toString();
         } else {
-            return null;
+            return userDetails;
         }
     }
 
@@ -361,7 +336,7 @@ public class UserLoginController {
                 //claims.get("iss").toString() is http://gaia-local.skydns.local:88 due to the fact that internal communications are done via http
                 //externalDexUrl is https://gaia-local.skydns.local:444
                 //in order to prevent failure there is a workaround, but if it does not help, then issuer is really invalid
-                if(!claims.get("iss").toString().equals(internalIssuerUrl)){
+                if (!claims.get("iss").toString().equals(internalIssuerUrl)) {
                     throw new RuntimeException("bad issue: " + claims.get("iss").toString());
                 }
             }
@@ -403,7 +378,7 @@ public class UserLoginController {
         Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setDomain("."+idcmDomain);
+        cookie.setDomain("." + idcmDomain);
         cookie.setSecure(false);
         if (expiration != null) {
             cookie.setMaxAge(expiration);
@@ -412,7 +387,7 @@ public class UserLoginController {
     }
 
     String switchToInternalUrl(String externalUrl) {
-        String internalUrl =  externalUrl.replace(domain, idpConnectionDetails.get("internalDexServer")).replace(idpConnectionDetails.get("externalHttpPort"), idpConnectionDetails.get("internalPort")).replace(idpConnectionDetails.get("externalProtocol"), idpConnectionDetails.get("internalProtocol"));
+        String internalUrl = externalUrl.replace(domain, idpConnectionDetails.get("internalDexServer")).replace(idpConnectionDetails.get("externalHttpPort"), idpConnectionDetails.get("internalPort")).replace(idpConnectionDetails.get("externalProtocol"), idpConnectionDetails.get("internalProtocol"));
         logger.info("Switch from " + externalUrl + " to " + internalUrl);
         return internalUrl;
     }
