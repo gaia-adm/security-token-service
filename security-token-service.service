@@ -51,6 +51,7 @@ ExecStart=/usr/bin/docker run  \
 -e DEX_APP_CLIENT_ID=${DEX_APP_CLIENT_ID} \
 -e DEX_APP_CLIENT_SECRET=${DEX_APP_CLIENT_SECRET} \
 -e DEX_APP_REDIRECTURL_0=${DEX_APP_REDIRECTURL_0} \
+-e INTERNAL_ACM_SERVER=acmserver.skydns.local \
 -e etcdUrl=http://${COREOS_PRIVATE_IPV4}:4001 \
 -e SERVICE_8080_NAME=sts \
 -e SERVICE_8080_TAGS=master \

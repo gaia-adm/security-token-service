@@ -46,7 +46,7 @@ public class AcmConnectionManager implements IDPConnectManager{
             }
             logger.info("DOMAIN is " + domain);
 
-            String internalIdmServer = System.getenv("INTERNAL_ACM_SERVER");    //e.g., dexworker.skydns.local
+            String internalIdmServer = System.getenv("INTERNAL_ACM_SERVER");    //e.g., acmserver.skydns.local
             if (StringUtils.isEmpty(internalIdmServer)) {
                 logger.error("INTERNAL_ACM_SERVER environment variable not set; using acmserver.skydns.local; it may work but you must verify it is not by mistake");
                 internalIdmServer = "acmserver.skydns.local";
