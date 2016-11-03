@@ -135,17 +135,22 @@ public class UserLoginController {
 
         boolean result = true;
 
-        Set<String> connectionBadDetails = idpConnectionDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
-        Set<String> clientBadDetails = idpClientDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
+        Set<String> dexConnectionBadDetails = idpConnectionDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
+        Set<String> dexClientBadDetails = idpClientDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
 
-        if (!connectionBadDetails.isEmpty()) {
+        Set<String> acmConnectionBadDetails = idcmConnectionDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
+        Set<String> acmClientBadDetails = idcmConnectionDetails.entrySet().stream().filter(e -> StringUtils.isEmpty(e.getValue())).map(Map.Entry::getKey).collect(Collectors.toSet());
+
+        if (!dexConnectionBadDetails.isEmpty() && !acmConnectionBadDetails.isEmpty()) {
             result = false;
-            connectionBadDetails.stream().forEach(e -> logger.error("Empty or null value provided for " + e));
+            dexConnectionBadDetails.stream().forEach(e -> logger.error("Empty or null value provided for " + e));
+            acmConnectionBadDetails.stream().forEach(e -> logger.error("Empty or null value provided for " + e));
         }
 
-        if (!clientBadDetails.isEmpty()) {
+        if (!dexClientBadDetails.isEmpty() && !acmClientBadDetails.isEmpty()) {
             result = false;
-            clientBadDetails.stream().forEach(e -> logger.error("Empty or null value provided for " + e));
+            dexClientBadDetails.stream().forEach(e -> logger.error("Empty or null value provided for " + e));
+            acmClientBadDetails.stream().forEach(e -> logger.error("Empty or null value provided for " + e));
         }
 
         return result;
