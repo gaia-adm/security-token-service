@@ -8,6 +8,8 @@ import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeysResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.*;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
@@ -27,12 +30,36 @@ import java.util.concurrent.TimeoutException;
 @Component
 public class EtcdClientDetailsService implements ClientDetailsService, ClientRegistrationService {
 
+    private final static Logger logger = LoggerFactory.getLogger(EtcdClientDetailsService.class);
 
     private ObjectMapper mapper = new ObjectMapper();
 
     private PasswordEncoder passwordEncoder = NoOpPasswordEncoder.getInstance();
 
     private EtcdClient etcdClient = EtcdClientCreator.getInstance().getEtcdClient();
+
+    @PostConstruct
+    void init(){
+        ensureEtcdFolder(EtcdPaths.CD_PATH);
+        ensureEtcdFolder(EtcdPaths.AT_PATH);
+    }
+
+    private void ensureEtcdFolder(String folderName) {
+        try {
+            EtcdResponsePromise<EtcdKeysResponse> promise = etcdClient.putDir(folderName).send();
+            EtcdKeysResponse response = promise.get();
+            if(response.node.dir){
+                logger.info(folderName + " dir is successfully created");
+            } else {
+                logger.error(folderName + " is not a dir? Please check! Continue...");
+            }
+        } catch (IOException | TimeoutException e) {
+            logger.error("Cannot create " + folderName + " dir - connectivity problem. You can create it manually, if needed or just restart this service. Continue...");
+        } catch (EtcdException e) {
+            logger.error(folderName + " dir is probably already existing. Continue...");
+        }
+    }
+
 
     /**
      * @param passwordEncoder the password encoder to set
