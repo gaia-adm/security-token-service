@@ -28,16 +28,16 @@ dependencies:
 test:
   override:
   # prepare ACM mock database
-    - docker run --name migr gaiaadm/acmserver:58-feature_acm-integration knex migrate:latest --env=mock
-    - docker cp migr:/usr/src/app/sqllite_for_testing /tmp
-    - docker run -d  -v /tmp/sqllite_for_testing:/usr/src/app/sqllite_for_testing -e mockuserid=2474 -e DEBUG=knex:* gaiaadm/acmserver:58-feature_acm-integration knex seed:run --env=mock
+    - docker run --name migr gaiaadm/acmserver:59-feature_acm-integration knex migrate:latest --env=mock
+    - docker cp migr:/usr/src/app/sqlite_for_testing /tmp
+    - docker run -d  -v /tmp/sqlite_for_testing:/usr/src/app/sqlite_for_testing -e mockuserid=2474 -e DEBUG=knex:* gaiaadm/acmserver:59-feature_acm-integration knex seed:run --env=mock
   # start ACM mock server
-    - docker run -d --name acmserver -v /tmp/sqllite_for_testing:/usr/src/app/sqllite_for_testing -p 3100:3000  -e DOMAIN=localhost -e BACKEND_HOST=localhost -e BACKEND_PORT=3000 -e CLIENT_HOST=localhost -e CLIENT_PORT=8080 -e SMTP_HOST=smtp.mailgun.org -e SMTP_USERNAME=dummy -e SMTP_PASSWORD=dummy -e mockuserid=2474 -e DEBUG=knex:* -e GOOGLE_CLIENT_ID=578294004410-ennub25ri42roilsansk8pvl5v6j7hnl.apps.googleusercontent.com -e GOOGLE_CLIENT_PASSWORD=$GOOGLE_CLIENT_PASSWORD -e LOG_LEVEL=DEBUG gaiaadm/acmserver:58-feature_acm-integration node ./bin/www --env=mock
+    - docker run -d --name acmserver -v /tmp/sqlite_for_testing:/usr/src/app/sqllte_for_testing -p 3100:3000  -e DOMAIN=localhost -e BACKEND_HOST=localhost -e BACKEND_PORT=3000 -e CLIENT_HOST=localhost -e CLIENT_PORT=8080 -e SMTP_HOST=smtp.mailgun.org -e SMTP_USERNAME=dummy -e SMTP_PASSWORD=dummy -e mockuserid=2474 -e DEBUG=knex:* -e GOOGLE_CLIENT_ID=578294004410-ennub25ri42roilsansk8pvl5v6j7hnl.apps.googleusercontent.com -e GOOGLE_CLIENT_PASSWORD=$GOOGLE_CLIENT_PASSWORD -e LOG_LEVEL=DEBUG gaiaadm/acmserver:58-feature_acm-integration node ./bin/www --env=mock
   # start Etcd
     - /home/ubuntu/etcd-v2.2.0-linux-amd64/etcd --debug -advertise-client-urls=http://0.0.0.0:2379 -listen-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001 :
         background: true
   # start STS and verify it is up and running
-    - docker run -d --name sts -p 9001:8080 -e INTERNAL_ACM_SERVER=localhost -e noDex=true -e etcdUrl=http://$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1):4001 gaiaadm/sts
+    - docker run -d --name sts -p 9001:8080 -e INTERNAL_ACM_SERVER=localhost -e noDex=true -e etcdUrl=http://$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1):4001 gaiaadm/sts; sleep 10
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
   # run system test
     - ./SystemTestCurl.sh
