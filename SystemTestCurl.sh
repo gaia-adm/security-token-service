@@ -2,7 +2,6 @@
 
 CLIENT_NAME="restapp"
 CLIENT_SECRET="secret"
-TENANT_ADMIN_NAME="foo@hp.com"
 
 # Format: validate $? <good_message> <bad_message>
 function validate {
@@ -14,24 +13,18 @@ function validate {
    fi
 }
 
-#### DB cleanup to enable re-run
-curl -i -X DELETE http://localhost:9001/sts/oauth/client/$CLIENT_NAME | grep '204 No Content'
-validate $? 'SUCCESS: OAUTH_CLIENT_DETAILS table is clean' 'ERROR: Failed to clean OAUTH_CLIENT_DETAILS table'
-TENANT_ID=$(curl -H "Accept: application/json" http://localhost:9001/sts/tenant?user=$TENANT_ADMIN_NAME | grep 'tenantId' | sed s/,/\\n/g | grep 'tenantId' | sed -s 's/"tenantId":\(.*\)/\1/'  | sed -r 's/\{//g')
-if [ ! -z "$TENANT_ID" ]; then
-   echo Deleting tenant $TENANT_ID
-   curl -i -X DELETE http://localhost:9001/sts/tenant/$TENANT_ID  | grep '204 No Content'
-   validate $? 'SUCCESS: TENANT table is clean' 'ERROR: Failed to clean TENANT table'
-fi
+##### login to ACM mock as a superuser
+GAIATOKEN=$(curl http://localhost:3100/acms/mock)
 
-##### create tenant
-curl -i -H "Content-Type: application/json" -d '{"adminUserName": "'$TENANT_ADMIN_NAME'"}' http://localhost:9001/sts/tenant | grep '201 Created'
-validate $? 'SUCCESS: Tenant created successfully by admin '$TENANT_ADMIN_NAME 'ERROR: Failed to create tenant by admin '$TENANT_ADMIN_NAME
+##### create tenant in ACM mock
+TENANT=$(curl -X POST -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN -d '{"name": "TestAccount","description": "Using for STS testing"}' http://localhost:3100/acms/api/accounts)
+echo $TENANT | grep id
+validate $? 'SUCCESS: Tenant created successfully: '$TENANT 'ERROR: Failed to create tenant, error received: '$TENANT
 
 ##### get tenant id for further usage
-TENANT_ID=$(curl -H "Accept: application/json" http://localhost:9001/sts/tenant?user=$TENANT_ADMIN_NAME | grep 'tenantId' | sed s/,/\\n/g | grep 'tenantId' | sed -s 's/"tenantId":\(.*\)/\1/'  | sed -r 's/\{//g')
+TENANT_ID=$(echo $TENANT | jq '.id')
 echo Using tenant $TENANT_ID
-validate $? 'SUCCESS: Successfully got tenant data with admin user '$TENANT_ADMIN_NAME', its id is '$TENANT_ID 'ERROR: Cannot get tenant id for tenant with admin user '$TENANT_ADMIN_NAME
+validate $? 'SUCCESS: Successfully got tenant id '$TENANT_ID 'ERROR: Cannot get tenant id for tenant '$TENANT
 
 ##### create client
 curl -i -H "Content-Type: application/json" -d '{"client_id": "'$CLIENT_NAME'","client_secret": "'$CLIENT_SECRET'","scope": "read,write,trust","authorized_grant_types": "client_credentials","authorities": "ROLE_APP","tenantId": '$TENANT_ID'}' http://localhost:9001/sts/oauth/client | grep '201 Created'
@@ -66,5 +59,5 @@ curl -i -X DELETE http://localhost:9001/sts/oauth/client/$CLIENT_NAME | grep '20
 validate $? 'SUCCESS: OAUTH_CLIENT_DETAILS table is clean' 'ERROR: Failed to clean OAUTH_CLIENT_DETAILS table'
 curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=$TOKEN | grep '400 Bad Request'
 validate $? 'SUCCESS: Token '$TOKEN' is deleted after client deletion' 'ERROR: Token '$TOKEN' is still existing after client deletion'
-curl -i -X DELETE http://localhost:9001/sts/tenant/$TENANT_ID  | grep '204 No Content'
+curl -X DELETE -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:3100/acms/api/accounts/$TENANT_ID | grep 'Account successfully deleted'
 validate $? 'SUCCESS: TENANT table is clean' 'ERROR: Failed to clean TENANT table'
