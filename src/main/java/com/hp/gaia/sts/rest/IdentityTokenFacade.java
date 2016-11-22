@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationService;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -60,9 +61,22 @@ public class IdentityTokenFacade {
     @RequestMapping(value = "/facade/getmyapitoken", method = RequestMethod.GET)
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<String> getMyToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<String> getMyToken(@RequestParam(value = "st", required = false) String selectedTenantString ,HttpServletRequest request, HttpServletResponse response) throws IOException {
 
+        Long tenantId;
         Cookie identityCookie = null;
+        JsonNode selectedAccountDetails = null;
+
+        if (StringUtils.isEmpty(selectedTenantString)){
+            return createBadResponse(HttpStatus.BAD_REQUEST, "No tenant selected");
+        }
+
+        try{
+            tenantId = Long.valueOf(selectedTenantString);
+        } catch (NumberFormatException e){
+            logger.error("Invalid tenant id provided: " + selectedTenantString);
+            return createBadResponse(HttpStatus.BAD_REQUEST, "Invalid tenant provided");
+        }
 
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -85,7 +99,26 @@ public class IdentityTokenFacade {
 
         JsonNode identityNode = om.readTree(verified);
         if (identityNode.get("accounts").isArray() && identityNode.get("accounts").size() > 0) {
-            Long tenantId = identityNode.get("accounts").get(0).get("account_id").asLong();
+
+            //check that selected tenant is one that user is associated with and user has enough permissions
+
+            JsonNode accounts = identityNode.get("accounts");
+            for(JsonNode account : accounts){
+                if(tenantId == account.get("account_id").getLongValue()){
+                    selectedAccountDetails = account;
+                    break;
+                }
+            }
+            if(selectedAccountDetails==null){
+                logger.error("Token requested but tenant " + tenantId + " not associated with user " + identityNode.get("id"));
+                return createBadResponse(HttpStatus.FORBIDDEN, "Getting token is not allowed for the selected tenant");
+            }
+            //role_ids element contains comma-separated ids. Not using role_names in order to allow renaming in ACM
+            if(!selectedAccountDetails.get("role_ids").asText().contains("1")){
+                logger.error("User " + identityNode.get("id") + " has no enough permissions to obtain the token for tenant " + tenantId);
+                return createBadResponse(HttpStatus.FORBIDDEN, "Not authorized to complete the operation");
+            }
+
             ClientDetails cd = findMyClient(tenantId);
             if (cd == null) {
                 return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Client is missing");
@@ -98,8 +131,7 @@ public class IdentityTokenFacade {
             if (apiToken == null) {
                 return createBadResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to obtain token");
             }
-            //Long tenantToCheck = om.readTree(apiToken).get("tenantId").asLong();
-            //TODO - boris: do we want to re-check tenant existence?
+
             return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(apiToken);
 
 
