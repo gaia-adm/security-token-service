@@ -114,7 +114,7 @@ public class IdentityTokenFacade {
                 return createBadResponse(HttpStatus.FORBIDDEN, "Getting token is not allowed for the selected tenant");
             }
             //role_ids element contains comma-separated ids. Not using role_names in order to allow renaming in ACM
-            if(!selectedAccountDetails.get("role_ids").asText().contains("1")){
+            if(!selectedAccountDetails.get("role_ids").toString().contains("1")){
                 logger.error("User " + identityNode.get("id") + " has no enough permissions to obtain the token for tenant " + tenantId);
                 return createBadResponse(HttpStatus.FORBIDDEN, "Not authorized to complete the operation");
             }
