@@ -30,7 +30,6 @@ KillMode=none
 
 # Get CoreOS environmental variables
 EnvironmentFile=/etc/environment
-EnvironmentFile=-/etc/env-dex-client
 
 # Restart policy
 Restart=on-failure
@@ -46,12 +45,7 @@ ExecStart=/usr/bin/docker run  \
 --name sts \
 -p 9001:8080 \
 -p 9093:9093 \
--e noDex=true \
--e INTERNAL_DEX_SERVER=dexworker.skydns.local \
 -e DOMAIN=${DOMAIN} \
--e DEX_APP_CLIENT_ID=${DEX_APP_CLIENT_ID} \
--e DEX_APP_CLIENT_SECRET=${DEX_APP_CLIENT_SECRET} \
--e DEX_APP_REDIRECTURL_0=${DEX_APP_REDIRECTURL_0} \
 -e INTERNAL_ACM_SERVER=acmserver.skydns.local \
 -e etcdUrl=http://${COREOS_PRIVATE_IPV4}:4001 \
 -e SERVICE_8080_NAME=sts \

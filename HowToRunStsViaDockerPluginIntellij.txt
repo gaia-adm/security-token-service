@@ -24,4 +24,4 @@ Docker plugin configuration
 3. Container params:
 - Json file: container_settings.json in current directory
 - Command: /usr/bin/java -agentlib:jdwp=transport=dt_socket,address=5555,suspend=n,server=y -Djetty.logs=/usr/local/jetty/logs -Djetty.home=/usr/local/jetty -Djetty.base=/var/lib/jetty -Djava.io.tmpdir=/tmp/jetty -jar /usr/local/jetty/start.jar jetty.state=/run/jetty/jetty.state jetty-started.xml
-- Environment variables: DEX_APP_CLIENT_ID, DEX_APP_CLIENT_SECRET, DEX_APP_REDIRECTURL_0 as set in /etc/env-dex-client file; SERVICE_8080_NAME (sts), SERVICE_8080_TAGS (master), etcdUrl (http://172.17.8.101:4001), INTERNAL_DEX_SERVER (dexworker.skydns.local)
+- Environment variables: SERVICE_8080_NAME (sts), SERVICE_8080_TAGS (master), etcdUrl (http://172.17.8.101:4001)

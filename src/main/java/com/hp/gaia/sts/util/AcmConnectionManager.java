@@ -71,7 +71,7 @@ public class AcmConnectionManager implements IDPConnectManager{
         return acmConnectionDetails;
     }
 
-    //There is no need for IDP client details when working with ACM; not like in Dex flavor, the IDP is google and it is only accessed by ACM
+    //There is no need for IDP client details when working with ACM;
     @Override
     public Map<String, String> getClientDetails() {
         return new HashMap<>();
