@@ -104,7 +104,8 @@ public class IdentityTokenFacade {
 
             JsonNode accounts = identityNode.get("accounts");
             for(JsonNode account : accounts){
-                if(tenantId == account.get("account_id").getLongValue()){
+                //Account ID is a bigint in Postgres so returned as a String by ACM/knex
+                if(tenantId == account.get("account_id").asLong()){
                     selectedAccountDetails = account;
                     break;
                 }
