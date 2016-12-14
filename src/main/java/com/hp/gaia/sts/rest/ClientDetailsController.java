@@ -48,8 +48,15 @@ public class ClientDetailsController {
         return objectMapper.writeValueAsString(clientDetails);
     }
 
-    @RequestMapping(value = "/oauth/client", method = RequestMethod.POST, consumes = "application/json")
-    @ResponseBody
+    /**
+     * Deprecated in favor of {@link IdentityTokenFacade} where client is create upon a first-time ever request for API token (per tenant)
+     * @param clientDetailsString
+     * @return
+     * @throws IOException
+     */
+    @Deprecated
+/*    @RequestMapping(value = "/oauth/client", method = RequestMethod.POST, consumes = "application/json")
+    @ResponseBody*/
     public ResponseEntity<String> addClient(@RequestBody String clientDetailsString) throws IOException {
 
         ClientDetails clientDetails = objectMapper.readValue(clientDetailsString, BaseClientDetails.class);

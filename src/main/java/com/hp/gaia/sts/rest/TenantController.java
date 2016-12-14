@@ -21,6 +21,7 @@ import java.io.IOException;
  * Created by belozovs on 6/25/2015.
  *
  */
+@Deprecated
 @Controller
 public class TenantController {
 

@@ -14,7 +14,7 @@ Prerequisites:
 Docker plugin configuration
 1. Docker server:
 - APU URL: http://<VAGRANTURL>:2375 (real VAGRANTURL can be taken from inet field of "ifconfig eth01" command output)
-- Certificates folder: C:/Users/%user%/.vagrant.d/insecure_private_key
+- Certificates folder: $home/.vagrant.d/insecure_private_key
 - Docker Compose executable: docker-compose
 2. Deployment params:
 - Deployment: Dockerfile
