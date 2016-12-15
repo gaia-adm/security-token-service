@@ -1,7 +1,6 @@
 #!/bin/bash
 
-CLIENT_NAME="restapp"
-CLIENT_SECRET="secret"
+TENANT_ID=9 #set in ACM server mock seed file
 
 # Format: validate $? <good_message> <bad_message>
 function validate {
@@ -13,33 +12,22 @@ function validate {
    fi
 }
 
+
+#================================ NOTE: ACM hostname or IP must be known when running STS container
+
 ##### login to ACM mock as a superuser
 GAIATOKEN=$(curl http://localhost:3100/acms/mock)
 
-##### create tenant in ACM mock
-TENANT=$(curl -X POST -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN -d '{"name": "TestAccount","description": "Using for STS testing"}' http://localhost:3100/acms/api/accounts)
-echo $TENANT | grep id
-validate $? 'SUCCESS: Tenant created successfully: '$TENANT 'ERROR: Failed to create tenant, error received: '$TENANT
+#### create token and oauth client
+curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:9001/sts/facade/getmyapitoken?st=9
+validate $? 'SUCCESS: Successfully created access_token , its value is '$TOKEN 'ERROR: Cannot create access_token'
 
-##### get tenant id for further usage
-TENANT_ID=$(echo $TENANT | jq '.id')
-echo Using tenant $TENANT_ID
-validate $? 'SUCCESS: Successfully got tenant id '$TENANT_ID 'ERROR: Cannot get tenant id for tenant '$TENANT
-
-##### create client
-curl -i -H "Content-Type: application/json" -d '{"client_id": "'$CLIENT_NAME'","client_secret": "'$CLIENT_SECRET'","scope": "read,write,trust","authorized_grant_types": "client_credentials","authorities": "ROLE_APP","tenantId": '$TENANT_ID'}' http://localhost:9001/sts/oauth/client | grep '201 Created'
-validate $? 'SUCCESS: Client '$CLIENT_NAME' created successfully' 'ERROR: Failed to create client '$CLIENT_NAME
-
-#### get client details by id
-curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/client/$CLIENT_NAME | grep '"client_secret":"'$CLIENT_SECRET'"' | grep '"tenantId":'$TENANT_ID
-validate $? 'SUCCESS: Client '$CLIENT_NAME' details can be fetched' 'ERROR: Failed to fetch client details for client '$CLIENT_NAME
-
-#### create token
-TOKEN=$(curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST "http://localhost:9001/sts/oauth/token?grant_type=client_credentials&client_id=$CLIENT_NAME&client_secret=$CLIENT_SECRET" | grep 'access_token' | sed s/,/\\n/g | grep 'access_token' | sed -s 's/"access_token":\(.*\)/\1/'  | sed -r 's/\{//g' | sed -r 's/\"//g')
-validate $? 'SUCCESS: Successfully created access_token for client '$CLIENT_NAME', its value is '$TOKEN 'ERROR: Cannot create access_token for client '$CLIENT_NAME
+#### get oauth client created automatically during the token creation
+CLIENT_NAME=$(curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:9001/sts/oauth/client | grep 'client_id'  | sed s/,/\\n/g | grep 'client_id' | cut -d \" -f 4 )
+validate $? 'SUCCESS: oauth client '$CLIENT_NAME' received successfully' 'ERROR: Failed to get oauth client '$CLIENT_NAME
 
 #### validate token
-curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=$TOKEN | grep '200 OK'
+TOKEN=$(curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:9001/sts/facade/getmyapitoken?st=9 | grep 'access_token' | sed s/,/\\n/g | grep 'access_token' | sed -s 's/"access_token":\(.*\)/\1/'  | sed -r 's/\{//g' | sed -r 's/\"//g')
 validate $? 'SUCCESS: Token '$TOKEN' is valid' 'ERROR: Token '$TOKEN' is invalid'
 
 #### revoke token
@@ -50,14 +38,12 @@ validate $? 'SUCCESS: Token '$TOKEN' revoked successfully' 'ERROR: Failed to rev
 curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=$TOKEN | grep '400 Bad Request'
 validate $? 'SUCCESS: Token '$TOKEN' is invalid after revoking' 'ERROR: Token '$TOKEN' is still valid after revoking'
 
-#### create token again to validate it is removed when client deleted
-TOKEN=$(curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST "http://localhost:9001/sts/oauth/token?grant_type=client_credentials&client_id=$CLIENT_NAME&client_secret=$CLIENT_SECRET" | grep 'access_token' | sed s/,/\\n/g | grep 'access_token' | sed -s 's/"access_token":\(.*\)/\1/'  | sed -r 's/\{//g' | sed -r 's/\"//g')
+#### create token again to validate it is removed when client deleted bit client is kept
+TOKEN=$(curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:9001/sts/facade/getmyapitoken?st=9 | grep 'access_token' | sed s/,/\\n/g | grep 'access_token' | sed -s 's/"access_token":\(.*\)/\1/'  | sed -r 's/\{//g' | sed -r 's/\"//g')
 validate $? 'SUCCESS: Successfully created access_token for client '$CLIENT_NAME', its value is '$TOKEN 'ERROR: Cannot create access_token for client '$CLIENT_NAME
 
-#### DB cleanup to enable re-run
+#### cleanup to enable re-run
 curl -i -X DELETE http://localhost:9001/sts/oauth/client/$CLIENT_NAME | grep '204 No Content'
-validate $? 'SUCCESS: OAUTH_CLIENT_DETAILS table is clean' 'ERROR: Failed to clean OAUTH_CLIENT_DETAILS table'
+validate $? 'SUCCESS: Oauth client is removed' 'ERROR: Failed to remove oauth client'
 curl -i -H "Accept: application/json" http://localhost:9001/sts/oauth/check_token?token=$TOKEN | grep '400 Bad Request'
 validate $? 'SUCCESS: Token '$TOKEN' is deleted after client deletion' 'ERROR: Token '$TOKEN' is still existing after client deletion'
-curl -X DELETE -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:3100/acms/api/accounts/$TENANT_ID | grep 'Account successfully deleted'
-validate $? 'SUCCESS: TENANT table is clean' 'ERROR: Failed to clean TENANT table'
