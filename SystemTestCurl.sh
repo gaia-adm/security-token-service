@@ -16,7 +16,7 @@ function validate {
 #================================ NOTE: ACM hostname or IP must be known when running STS container
 
 ##### login to ACM mock as a superuser
-GAIATOKEN=$(curl http://localhost:3100/acms/mock)
+GAIATOKEN=$(curl http://localhost:3000/acms/mock)
 
 #### create token and oauth client
 curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:9001/sts/facade/getmyapitoken?st=9

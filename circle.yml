@@ -30,9 +30,9 @@ test:
   # prepare ACM mock database
     - docker run --name migr gaiaadm/acmserver:latest knex migrate:latest --env=mock
     - docker cp migr:/usr/src/app/sqlite_for_testing /tmp
-    - docker run -d  -v /tmp/sqlite_for_testing:/usr/src/app/sqlite_for_testing -e mockuserid=9 -e DEBUG=knex:* gaiaadm/acmserver:latest knex seed:run --env=mock
+    - docker run -d  -v /tmp/sqlite_for_testing:/usr/src/app/sqlite_for_testing -e mockuserid=2474 -e DEBUG=knex:* gaiaadm/acmserver:latest knex seed:run --env=mock
   # start ACM mock server
-    - docker run -d --name acmserver -v /tmp/sqlite_for_testing:/usr/src/app/sqlite_for_testing -p 3100:3000  -e DOMAIN=localhost -e BACKEND_HOST=localhost -e BACKEND_PORT=3000 -e CLIENT_HOST=localhost -e CLIENT_PORT=8080 -e SMTP_HOST=smtp.mailgun.org -e SMTP_USERNAME=dummy -e SMTP_PASSWORD=dummy -e mockuserid=2474 -e DEBUG=knex:* -e GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID -e GOOGLE_CLIENT_PASSWORD=$GOOGLE_CLIENT_PASSWORD -e LOG_LEVEL=DEBUG gaiaadm/acmserver:latest node ./bin/www --env=mock
+    - docker run -d --name acmserver -v /tmp/sqlite_for_testing:/usr/src/app/sqlite_for_testing -p 3000:3000  -e DOMAIN=localhost -e BACKEND_HOST=localhost -e BACKEND_PORT=3000 -e CLIENT_HOST=localhost -e CLIENT_PORT=8080 -e SMTP_HOST=smtp.mailgun.org -e SMTP_USERNAME=dummy -e SMTP_PASSWORD=dummy -e mockuserid=9 -e DEBUG=knex:* -e GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID -e GOOGLE_CLIENT_PASSWORD=$GOOGLE_CLIENT_PASSWORD -e LOG_LEVEL=DEBUG gaiaadm/acmserver:latest node ./bin/www --env=mock
   # start Etcd
     - /home/ubuntu/etcd-v2.2.0-linux-amd64/etcd --debug -advertise-client-urls=http://0.0.0.0:2379 -listen-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001 :
         background: true
