@@ -13,14 +13,23 @@ function validate {
 }
 
 
+until $(curl --output /dev/null --silent --head --fail http://localhost:3000/acms/mock); do
+    printf 'ACM server is not ready yet; trying again in 5 second ...'
+    sleep 5
+done
+
 #================================ NOTE: ACM hostname or IP must be known when running STS container
 
-##### login to ACM mock as a superuser
+##### obtain gaia.token for testing user
 GAIATOKEN=$(curl http://localhost:3000/acms/mock)
+
+##### log available information for better debugging
+curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:3000/acms/api/accounts
+curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:3000/acms/api/users/self
 
 #### create token and oauth client
 curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:9001/sts/facade/getmyapitoken?st=9
-validate $? 'SUCCESS: Successfully created access_token , its value is '$TOKEN 'ERROR: Cannot create access_token'
+validate $? 'SUCCESS: Successfully created access_token' 'ERROR: Cannot create access_token'
 
 #### get oauth client created automatically during the token creation
 CLIENT_NAME=$(curl -H 'Content-Type: application/json' --cookie 'gaia.token='$GAIATOKEN http://localhost:9001/sts/oauth/client | grep 'client_id'  | sed s/,/\\n/g | grep 'client_id' | cut -d \" -f 4 )
