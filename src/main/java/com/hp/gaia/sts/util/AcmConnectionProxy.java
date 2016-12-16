@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
@@ -35,6 +36,11 @@ public class AcmConnectionProxy {
 
     private ObjectMapper om = new ObjectMapper();
 
+
+    @PostConstruct
+    void init(){
+        logger.info("ACM server base URL: " + acmBaseUrl);
+    }
 
     /**
      * Verify user details. Can be done based on identity token only (self verification) or also using the user ID provided;
