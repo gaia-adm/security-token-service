@@ -37,8 +37,7 @@ test:
     - /home/ubuntu/etcd-v2.2.0-linux-amd64/etcd --debug -advertise-client-urls=http://0.0.0.0:2379 -listen-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001 :
         background: true
   # start STS and verify it is up and running
-    - ACM_IP=$(docker inspect acmserver | grep IPAddress | tail -1 | cut -d \" -f 4)
-    - docker run -d --name sts -p 9001:8080 -e INTERNAL_ACM_SERVER=$ACM_IP -e etcdUrl=http://$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1):4001 gaiaadm/sts; sleep 10
+    - docker run -d --name sts -p 9001:8080 -e INTERNAL_ACM_SERVER=$(docker inspect acmserver | grep IPAddress | tail -1 | cut -d \" -f 4) -e etcdUrl=http://$(ifconfig | grep inet | head -1 | cut -d ':' -f 2 | cut -d ' ' -f 1):4001 gaiaadm/sts; sleep 10
     - curl -i http://localhost:9001/sts/oauth/check_token?token=invalid.token | grep "400 Bad Request"
   # run system test
     - ./SystemTestCurl.sh
